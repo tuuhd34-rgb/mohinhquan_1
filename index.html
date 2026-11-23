@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
- 
+  <title>Menu Gọi Món</title>
   <style>
     :root {
       --bg: #f4f5f7;
@@ -21,7 +21,7 @@
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
       margin: 0;
-      padding: 14px 14px 235px;
+      padding: 14px 14px 245px;
       background: var(--bg);
       color: var(--text);
     }
@@ -83,7 +83,7 @@
 
     .category-heading {
       margin: 16px 0 8px;
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 700;
       color: #1f2937;
       display: flex;
@@ -104,42 +104,69 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
+    }
+
+    .item-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .item-thumb {
+      width: 72px;
+      height: 72px;
+      border-radius: 12px;
+      object-fit: cover;
+      border: 1px solid #e5e7eb;
+      background: #f3f4f6;
+      flex-shrink: 0;
+    }
+
+    .item-info {
+      min-width: 0;
     }
 
     .item-name {
       font-weight: 700;
-      font-size: 15px;
+      font-size: 16px;
       line-height: 1.3;
     }
 
     .item-price {
       color: var(--accent);
-      font-weight: 700;
-      font-size: 14px;
-      margin-top: 3px;
+      font-weight: 800;
+      font-size: 15px;
+      margin-top: 4px;
     }
 
+    /* Làm to mục chọn số lượng và số lượng */
     .qty-controls {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       flex-shrink: 0;
     }
 
     .btn-qty {
-      width: 32px;
-      height: 32px;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
+      width: 42px;
+      height: 42px;
+      border: 1.5px solid #9ca3af;
+      border-radius: 10px;
       background: #f9fafb;
       color: #111827;
-      font-size: 17px;
-      font-weight: 700;
+      font-size: 22px;
+      font-weight: 800;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
+    }
+
+    .btn-qty:hover {
+      background: #e5e7eb;
     }
 
     .btn-qty:active {
@@ -147,10 +174,11 @@
     }
 
     .qty-val {
-      min-width: 22px;
+      min-width: 30px;
       text-align: center;
-      font-weight: 700;
-      font-size: 15px;
+      font-weight: 900;
+      font-size: 20px;
+      color: #111827;
     }
 
     .item-note-row {
@@ -171,7 +199,7 @@
 
     .item-note-input {
       flex: 1;
-      padding: 7px 10px;
+      padding: 8px 10px;
       border-radius: 8px;
       border: 1px solid #d1d5db;
       font-size: 13px;
@@ -197,7 +225,6 @@
       font-size: 14px;
     }
 
-    /* Khu vực đặt đơn & chọn bàn cố định phía dưới */
     .bottom-panel {
       position: fixed;
       bottom: 0;
@@ -306,24 +333,30 @@
       color: #fff;
       padding: 12px 14px;
       border-radius: 12px;
-      gap: 10px;
+      gap: 12px;
     }
 
     .cart-summary {
-      font-size: 15px;
-      font-weight: 700;
+      font-size: 16px;
+      font-weight: 800;
     }
 
+    /* Làm to chữ và nút Gửi đơn */
     .send-btn {
       background: var(--accent);
       color: var(--accent-text);
-      font-weight: 800;
-      font-size: 15px;
-      padding: 11px 18px;
+      font-weight: 900;
+      font-size: 19px;
+      padding: 13px 24px;
       border: none;
-      border-radius: 9px;
+      border-radius: 11px;
       cursor: pointer;
       white-space: nowrap;
+      letter-spacing: 0.3px;
+    }
+
+    .send-btn:hover {
+      background: #15803d;
     }
 
     .send-btn:disabled {
@@ -419,240 +452,17 @@
 
     const CATEGORIES = ["Đồ uống", "Đồ ăn", "Mì cay"];
 
+    const FALLBACK_IMAGES = {
+      "Đồ uống": "https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=240&q=75",
+      "Đồ ăn": "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=240&q=75",
+      "Mì cay": "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=240&q=75"
+    };
+
     const MENU = [
       // --- ĐỒ UỐNG ---
-      { id: 1, category: "Đồ uống", name: "Cà phê đen đá", price: 20000 },
-      { id: 2, category: "Đồ uống", name: "Cà phê sữa đá", price: 25000 },
-      { id: 3, category: "Đồ uống", name: "Bạc xỉu", price: 28000 },
-      { id: 4, category: "Đồ uống", name: "Cà phê muối", price: 32000 },
-      { id: 5, category: "Đồ uống", name: "Trà đào cam sả", price: 30000 },
-      { id: 6, category: "Đồ uống", name: "Trà chanh", price: 18000 },
-      { id: 7, category: "Đồ uống", name: "Trà vải nhiệt đới", price: 30000 },
-      { id: 8, category: "Đồ uống", name: "Matcha đá xay", price: 38000 },
-
-      // --- ĐỒ ĂN ---
-      { id: 9, category: "Đồ ăn", name: "Khoai tây chiên", price: 30000 },
-      { id: 10, category: "Đồ ăn", name: "Xúc xích đức nướng", price: 25000 },
-      { id: 11, category: "Đồ ăn", name: "Gà viên chiên giòn", price: 35000 },
-      { id: 12, category: "Đồ ăn", name: "Bánh mì bơ tỏi", price: 28000 },
-
-      // --- MÌ CAY ---
-      { id: 13, category: "Mì cay", name: "Mì cay bò mỹ", price: 45000 },
-      { id: 14, category: "Mì cay", name: "Mì cay hải sản", price: 48000 },
-      { id: 15, category: "Mì cay", name: "Mì cay xúc xích phô mai", price: 42000 },
-      { id: 16, category: "Mì cay", name: "Mì cay thập cẩm đặc biệt", price: 55000 }
-    ];
-
-    const cart = {};
-    const itemNotes = {};
-    let activeCategory = "all";
-
-    // Bắt buộc người dùng tự tay bấm chọn ("dine_in" hoặc "takeaway"), không chọn sẵn
-    let selectedMode = "";
-
-    const orderBoxEl = document.getElementById("order-box");
-    const tableSelectEl = document.getElementById("table-select");
-    const tableBigBoxEl = document.getElementById("table-big-box");
-    const btnDineInEl = document.getElementById("btn-dine-in");
-    const btnTakeawayEl = document.getElementById("btn-takeaway");
-
-    window.selectOrderMode = function(mode) {
-      selectedMode = mode;
-      orderBoxEl.classList.remove("alert-border");
-      btnDineInEl.classList.toggle("active", mode === "dine_in");
-      btnTakeawayEl.classList.toggle("active", mode === "takeaway");
-      tableBigBoxEl.classList.toggle("visible", mode === "dine_in");
-      syncTableTitle();
-
-      if (mode === "dine_in") {
-        tableSelectEl.focus();
-      }
-    };
-
-    window.onSelectTable = function() {
-      orderBoxEl.classList.remove("alert-border");
-      syncTableTitle();
-    };
-
-    window.syncTableTitle = function() {
-      const titleEl = document.getElementById("table-title");
-      if (!selectedMode) {
-        titleEl.innerText = "XIN CHÀO BẠN DIỆP CHO NGHĨA ĐẸP TRAI XIN LỖI NHA";
-        return;
-      }
-      if (selectedMode === "takeaway") {
-        titleEl.innerText = "Đặt đơn: MANG VỀ";
-        return;
-      }
-      const val = tableSelectEl.value.trim();
-      titleEl.innerText = val ? `Tại quán · BÀN ${val}` : "Tại quán · Chưa chọn số bàn";
-    };
-
-    window.setCategory = function(cat) {
-      activeCategory = cat;
-      document.querySelectorAll(".tab-btn").forEach(btn => {
-        btn.classList.toggle("active", btn.dataset.cat === cat);
-      });
-      renderMenu();
-    };
-
-    window.changeQty = function(id, delta) {
-      const next = (cart[id] || 0) + delta;
-      if (next <= 0) delete cart[id];
-      else cart[id] = next;
-      renderMenu();
-    };
-
-    window.updateItemNote = function(id, value) {
-      const trimmed = value.trim();
-      if (trimmed) itemNotes[id] = value;
-      else delete itemNotes[id];
-    };
-
-    function escapeHtml(str = "") {
-      return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
-    }
-
-    function renderItemCard(item) {
-      const qty = cart[item.id] || 0;
-      const noteVal = itemNotes[item.id] || "";
-      const placeholderNote = item.category === "Mì cay"
-        ? "VD: cấp độ 2, không hành, thêm nấm..."
-        : item.category === "Đồ uống"
-          ? "VD: ít đá, ít ngọt, mang ra trước..."
-          : "VD: nhiều tương ớt, giòn kỹ...";
-
-      return `
-        <div class="card">
-          <div class="card-top">
-            <div>
-              <div class="item-name">${escapeHtml(item.name)}</div>
-              <div class="item-price">${item.price.toLocaleString("vi-VN")}đ</div>
-            </div>
-            <div class="qty-controls">
-              <button class="btn-qty" onclick="changeQty(${item.id}, -1)">-</button>
-              <span class="qty-val">${qty}</span>
-              <button class="btn-qty" onclick="changeQty(${item.id}, 1)">+</button>
-            </div>
-          </div>
-          <div class="item-note-row">
-            <span class="item-note-label">Ghi chú món:</span>
-            <input
-              type="text"
-              class="item-note-input"
-              value="${escapeHtml(noteVal)}"
-              placeholder="${escapeHtml(placeholderNote)}"
-              oninput="updateItemNote(${item.id}, this.value)"
-            />
-          </div>
-        </div>
-      `;
-    }
-
-    function renderMenu() {
-      const box = document.getElementById("menu-list");
-      const catsToShow = activeCategory === "all" ? CATEGORIES : [activeCategory];
-
-      box.innerHTML = catsToShow.map(cat => {
-        const itemsInCat = MENU.filter(m => m.category === cat);
-        const headingHtml = activeCategory === "all"
-          ? `<div class="category-heading">${escapeHtml(cat)}</div>`
-          : "";
-        return headingHtml + itemsInCat.map(renderItemCard).join("");
-      }).join("");
-
-      updateCartBar();
-    }
-
-    function updateCartBar() {
-      let totalQty = 0, totalPrice = 0;
-      for (const [id, qty] of Object.entries(cart)) {
-        const item = MENU.find(m => m.id === Number(id));
-        if (item) {
-          totalQty += qty;
-          totalPrice += item.price * qty;
-        }
-      }
-      document.getElementById("cart-summary").innerText = `${totalQty} món - ${totalPrice.toLocaleString("vi-VN")}đ`;
-    }
-
-    window.submitOrder = async function() {
-      if (!selectedMode) {
-        orderBoxEl.classList.add("alert-border");
-        alert("Bạn phải tự tay bấm chọn 'UỐNG / ĂN TẠI QUÁN' hoặc 'MANG VỀ' trước khi gửi đơn!");
-        return;
-      }
-
-      const rawTable = tableSelectEl.value.trim();
-      if (selectedMode === "dine_in" && !rawTable) {
-        orderBoxEl.classList.add("alert-border");
-        alert("Bạn đã chọn Tại quán — vui lòng kích chọn số bàn (từ 1 đến 10) trước khi gửi đơn!");
-        tableSelectEl.focus();
-        return;
-      }
-
-      const items = Object.entries(cart).map(([id, qty]) => {
-        const numId = Number(id);
-        const item = MENU.find(m => m.id === numId);
-        const dishNote = (itemNotes[numId] || "").trim();
-        return {
-          id: item.id,
-          category: item.category,
-          name: item.name,
-          price: item.price,
-          qty,
-          note: dishNote
-        };
-      });
-
-      if (items.length === 0) {
-        alert("Bạn hãy chọn ít nhất 1 món trước khi gửi!");
-        return;
-      }
-
-      const tableLabel = selectedMode === "takeaway" ? "Mang về" : rawTable;
-      const modeText = selectedMode === "takeaway" ? "Mang về" : "Tại quán";
-      const total = items.reduce((sum, i) => sum + i.price * i.qty, 0);
-      const orderNote = document.getElementById("order-note").value.trim();
-      const btn = document.getElementById("send-btn");
-      btn.disabled = true;
-      btn.innerText = "Đang gửi...";
-
-      try {
-        await push(ref(db, "orders"), {
-          table: tableLabel,
-          orderType: modeText,
-          items,
-          total,
-          note: orderNote,
-          status: "new",
-          createdAt: Date.now()
-        });
-
-        for (const k of Object.keys(cart)) delete cart[k];
-        for (const k of Object.keys(itemNotes)) delete itemNotes[k];
-        document.getElementById("order-note").value = "";
-        syncTableTitle();
-        renderMenu();
-        alert(
-          selectedMode === "takeaway"
-            ? "Đã gửi đơn MANG VỀ! Quầy đang tiếp nhận."
-            : `Đã gửi đơn TẠI QUÁN (Bàn ${rawTable})! Quầy đang tiếp nhận.`
-        );
-      } catch (err) {
-        alert("Lỗi gửi đơn: " + err.message);
-      } finally {
-        btn.disabled = false;
-        btn.innerText = "Gửi đơn";
-      }
-    };
-
-    syncTableTitle();
-    renderMenu();
-  </script>
-</body>
-</html>
+      { id: 1, category: "Đồ uống", name: "Cà phê đen đá", price: 20000, image: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=240&q=75" },
+      { id: 2, category: "Đồ uống", name: "Cà phê sữa đá", price: 25000, image: "https://images.unsplash.com/photo-1572442388796-11668a67e53d?auto=format&fit=crop&w=240&q=75" },
+      { id: 3, category: "Đồ uống", name: "Bạc xỉu", price: 28000, image: "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=240&q=75" },
+      { id: 4, category: "Đồ uống", name: "Cà phê muối", price: 32000, image: "https://images.unsplash.com/photo-1517701604599-bb29b565090c?auto=format&fit=crop&w=240&q=75" },
+      { id: 5, category: "Đồ uống", name: "Trà đào cam sả", price: 30000, image: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=240&q=75" },
+      { id: 6, category: "Đồ uống", name: "Trà chanh", price: 18000, image: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=240&q=75" },
