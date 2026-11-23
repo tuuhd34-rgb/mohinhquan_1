@@ -53,6 +53,12 @@
       font-weight: 700;
     }
 
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
     .support-btn {
       background: #f59e0b;
       color: #111827;
@@ -69,7 +75,22 @@
       color: #fff;
     }
 
-    /* Hộp chọn số bàn chỉ hiện khi cần gọi nhân viên hỗ trợ */
+    .settings-toggle-btn {
+      background: #374151;
+      color: #fff;
+      border: 1px solid #4b5563;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .settings-toggle-btn.active {
+      background: #2563eb;
+      border-color: #2563eb;
+    }
+
     .support-panel {
       display: none;
       background: #fffbeb;
@@ -128,6 +149,201 @@
       border-radius: 10px;
       padding: 11px 12px;
       font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Khu vực thiết lập menu không cần sửa code */
+    .settings-panel {
+      display: none;
+      background: #ffffff;
+      border: 2px solid #2563eb;
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 14px;
+      box-shadow: 0 6px 18px rgba(37, 99, 235, 0.12);
+    }
+
+    .settings-panel.open {
+      display: block;
+    }
+
+    .settings-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .settings-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #1e3a8a;
+    }
+
+    .settings-sub-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn-sync-fb {
+      background: #059669;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 7px 11px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-reset-menu {
+      background: #f3f4f6;
+      color: #374151;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 7px 11px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .add-dish-box {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 14px;
+    }
+
+    .add-dish-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: #374151;
+      margin-bottom: 4px;
+    }
+
+    .field-input,
+    .field-select {
+      width: 100%;
+      padding: 9px 10px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      font-size: 14px;
+      background: #fff;
+      color: #111827;
+    }
+
+    .img-import-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .img-preview-box {
+      width: 58px;
+      height: 58px;
+      border-radius: 10px;
+      border: 1px dashed #9ca3af;
+      background: #fff;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .btn-add-dish {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 9px;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .btn-add-dish:hover {
+      background: #1d4ed8;
+    }
+
+    .manage-cat-group {
+      margin-top: 12px;
+    }
+
+    .manage-cat-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #111827;
+      margin-bottom: 8px;
+    }
+
+    .manage-item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .manage-item-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .manage-item-thumb {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 1px solid #d1d5db;
+      flex-shrink: 0;
+    }
+
+    .manage-item-btns {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .btn-mini-edit {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #f59e0b;
+      border-radius: 7px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-mini-del {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #ef4444;
+      border-radius: 7px;
+      padding: 6px 10px;
+      font-size: 12px;
       font-weight: 700;
       cursor: pointer;
     }
@@ -199,13 +415,14 @@
     }
 
     .item-thumb {
-      width: 66px;
-      height: 66px;
+      width: 72px;
+      height: 72px;
       border-radius: 12px;
       object-fit: cover;
       flex-shrink: 0;
       border: 1px solid #e5e7eb;
-      background: #f9fafb;
+      background: #f3f4f6;
+      display: block;
     }
 
     .item-name {
@@ -437,12 +654,65 @@
   <div class="header">
     <div>
       <div class="header-sub">Menu gọi món tại quầy</div>
-      <h2 id="table-title" class="header-title">kinh chao quy khach</h2>
+      <h2 id="table-title" class="header-title">XIN CHÀO BẠN DIỆP CHO NGHĨA ĐẸP TRAI XIN LỖI NHA</h2>
     </div>
-    <button type="button" class="support-btn" onclick="toggleSupportPanel()">🙋 Gọi nhân viên hỗ trợ</button>
+    <div class="header-actions">
+      <button type="button" id="btn-toggle-settings" class="settings-toggle-btn" onclick="toggleSettingsPanel()">⚙️ Thiết lập menu</button>
+      <button type="button" class="support-btn" onclick="toggleSupportPanel()">🙋 Gọi nhân viên hỗ trợ</button>
+    </div>
   </div>
 
-  <!-- Chỉ mở ra khi khách nhấn Gọi nhân viên hỗ trợ -->
+  <!-- Mục thiết lập menu: thêm/bớt/sửa món, giá và import ảnh từ ngoài -->
+  <div id="settings-panel" class="settings-panel">
+    <div class="settings-header">
+      <div class="settings-title">⚙️ THIẾT LẬP MÓN, GIÁ &amp; HÌNH ẢNH (3 MỤC)</div>
+      <div class="settings-sub-actions">
+        <button type="button" class="btn-sync-fb" onclick="syncMenuToFirebase()">☁️ Lưu đồng bộ Firebase</button>
+        <button type="button" class="btn-reset-menu" onclick="resetDefaultMenu()">↺ Khôi phục mặc định</button>
+      </div>
+    </div>
+
+    <div class="add-dish-box">
+      <div class="add-dish-grid">
+        <div>
+          <label for="new-dish-cat" class="field-label">Danh mục (3 mục)</label>
+          <select id="new-dish-cat" class="field-select">
+            <option value="Đồ uống">Đồ uống</option>
+            <option value="Đồ ăn">Đồ ăn</option>
+            <option value="Mì cay">Mì cay</option>
+          </select>
+        </div>
+        <div>
+          <label for="new-dish-name" class="field-label">Tên món mới</label>
+          <input id="new-dish-name" type="text" class="field-input" placeholder="VD: Trà sữa thái xanh" />
+        </div>
+        <div>
+          <label for="new-dish-price" class="field-label">Giá bán (VNĐ)</label>
+          <input id="new-dish-price" type="number" min="0" step="1000" class="field-input" placeholder="VD: 29000" />
+        </div>
+      </div>
+
+      <div class="img-import-row">
+        <img id="new-dish-preview" src="" alt="Xem trước ảnh" class="img-preview-box" />
+        <div style="flex:1; min-width:210px;">
+          <label for="new-dish-url" class="field-label">Import link ảnh từ ngoài (URL)</label>
+          <input id="new-dish-url" type="text" class="field-input" placeholder="Dán link ảnh https://... hoặc chọn file bên cạnh" oninput="onNewDishUrlInput()" />
+        </div>
+        <div>
+          <label for="new-dish-file" class="field-label">Hoặc tải ảnh từ máy</label>
+          <input id="new-dish-file" type="file" accept="image/*" onchange="onNewDishFileChange(event)" />
+        </div>
+      </div>
+
+      <!-- Input ẩn dùng khi đổi ảnh cho món có sẵn -->
+      <input id="edit-dish-file" type="file" accept="image/*" style="display:none;" onchange="onEditDishFileChange(event)" />
+
+      <button type="button" class="btn-add-dish" onclick="addNewDish()">➕ Thêm món vào menu</button>
+    </div>
+
+    <div id="manage-menu-list"></div>
+  </div>
+
   <div id="support-panel" class="support-panel">
     <div class="support-panel-title">Chọn số bàn cần nhân viên hỗ trợ:</div>
     <div class="support-controls">
@@ -526,103 +796,64 @@
     </div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBghiBbYsyo7F5AjWgcQqcCXyoVHi5nVz8",
-      authDomain: "mohinhquan.firebaseapp.com",
-      databaseURL: "https://mohinhquan-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "mohinhquan",
-      storageBucket: "mohinhquan.firebasestorage.app",
-      messagingSenderId: "557675172063",
-      appId: "1:557675172063:web:baf9433c28328878dbd96a"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
+  <script>
     const CATEGORIES = ["Đồ uống", "Đồ ăn", "Mì cay"];
+    const STORAGE_MENU_KEY = "quan_custom_menu_v1";
 
-    function makeDishSvg(bg1, bg2, accent, shapeType, emoji) {
-      let art = "";
-      if (shapeType === "cup") {
-        art = `
-          <rect x="34" y="42" width="52" height="54" rx="10" fill="#ffffff" stroke="#1f2937" stroke-width="3"/>
-          <rect x="38" y="54" width="44" height="38" rx="6" fill="${accent}"/>
-          <path d="M86 52 H95 A9 9 0 0 1 95 70 H86" fill="none" stroke="#1f2937" stroke-width="3"/>
-          <ellipse cx="60" cy="42" rx="28" ry="6" fill="#f9fafb" stroke="#1f2937" stroke-width="2.5"/>
-          <text x="60" y="79" text-anchor="middle" font-size="22">${emoji}</text>
-        `;
-      } else if (shapeType === "frappe") {
-        art = `
-          <polygon points="36,44 84,44 76,96 44,96" fill="#ffffff" stroke="#1f2937" stroke-width="3"/>
-          <polygon points="39,54 81,54 74,93 46,93" fill="${accent}"/>
-          <circle cx="48" cy="40" r="11" fill="#ecfdf5" stroke="#1f2937" stroke-width="2.5"/>
-          <circle cx="62" cy="37" r="13" fill="#ffffff" stroke="#1f2937" stroke-width="2.5"/>
-          <circle cx="74" cy="41" r="10" fill="#ecfdf5" stroke="#1f2937" stroke-width="2.5"/>
-          <line x1="68" y1="30" x2="77" y2="14" stroke="#ef4444" stroke-width="4" stroke-linecap="round"/>
-          <text x="60" y="80" text-anchor="middle" font-size="20">${emoji}</text>
-        `;
-      } else if (shapeType === "snack") {
-        art = `
-          <ellipse cx="60" cy="78" rx="36" ry="13" fill="#ffffff" stroke="#1f2937" stroke-width="3"/>
-          <ellipse cx="60" cy="75" rx="28" ry="8" fill="${accent}" opacity="0.35"/>
-          <text x="60" y="66" text-anchor="middle" font-size="30">${emoji}</text>
-        `;
-      } else {
-        art = `
-          <path d="M24 62 H96 A36 32 0 0 1 24 62 Z" fill="#ffffff" stroke="#1f2937" stroke-width="3"/>
-          <path d="M29 62 H91 A31 25 0 0 1 29 62 Z" fill="${accent}"/>
-          <path d="M36 56 Q48 44 60 56 T84 56" fill="none" stroke="#facc15" stroke-width="5" stroke-linecap="round"/>
-          <text x="60" y="45" text-anchor="middle" font-size="22">${emoji}</text>
-        `;
-      }
+    const FALLBACK_SVG =
+      "data:image/svg+xml;utf8," +
+      encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">' +
+        '<rect width="120" height="120" rx="18" fill="#f3f4f6"/>' +
+        '<circle cx="60" cy="62" r="32" fill="#e5e7eb"/>' +
+        '<text x="60" y="69" text-anchor="middle" font-size="28">🍽️</text>' +
+        '</svg>'
+      );
 
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
-        <defs>
-          <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="${bg1}"/>
-            <stop offset="100%" stop-color="${bg2}"/>
-          </linearGradient>
-        </defs>
-        <rect width="120" height="120" rx="22" fill="url(#g)"/>
-        ${art}
-      </svg>`;
-      return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
-    }
-
-    const MENU = [
+    const DEFAULT_MENU = [
       // --- ĐỒ UỐNG ---
-      { id: 1, category: "Đồ uống", name: "Cà phê đen đá", price: 20000, img: makeDishSvg("#fef3c7", "#fde68a", "#3b1e12", "cup", "☕") },
-      { id: 2, category: "Đồ uống", name: "Cà phê sữa đá", price: 25000, img: makeDishSvg("#ffedd5", "#fed7aa", "#7c2d12", "cup", "🤎") },
-      { id: 3, category: "Đồ uống", name: "Bạc xỉu", price: 28000, img: makeDishSvg("#fefce8", "#fef08a", "#b45309", "cup", "🥛") },
-      { id: 4, category: "Đồ uống", name: "Cà phê muối", price: 32000, img: makeDishSvg("#e0f2fe", "#bae6fd", "#451a03", "cup", "🧂") },
-      { id: 5, category: "Đồ uống", name: "Trà đào cam sả", price: 30000, img: makeDishSvg("#ffedd5", "#fdba74", "#ea580c", "cup", "🍑") },
-      { id: 6, category: "Đồ uống", name: "Trà chanh", price: 18000, img: makeDishSvg("#ecfccb", "#d9f99d", "#65a30d", "cup", "🍋") },
-      { id: 7, category: "Đồ uống", name: "Trà vải nhiệt đới", price: 30000, img: makeDishSvg("#ffe4e6", "#fecdd3", "#e11d48", "cup", "🌺") },
-      { id: 8, category: "Đồ uống", name: "Matcha đá xay", price: 38000, img: makeDishSvg("#dcfce7", "#bbf7d0", "#16a34a", "frappe", "🍵") },
+      { id: 1, category: "Đồ uống", name: "Cà phê đen đá", price: 20000, img: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80" },
+      { id: 2, category: "Đồ uống", name: "Cà phê sữa đá", price: 25000, img: "https://images.unsplash.com/photo-1572442388796-11668a67e53d?auto=format&fit=crop&w=300&q=80" },
+      { id: 3, category: "Đồ uống", name: "Bạc xỉu", price: 28000, img: "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=300&q=80" },
+      { id: 4, category: "Đồ uống", name: "Cà phê muối", price: 32000, img: "https://images.unsplash.com/photo-1517701604599-bb29b565090c?auto=format&fit=crop&w=300&q=80" },
+      { id: 5, category: "Đồ uống", name: "Trà đào cam sả", price: 30000, img: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=300&q=80" },
+      { id: 6, category: "Đồ uống", name: "Trà chanh", price: 18000, img: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=300&q=80" },
+      { id: 7, category: "Đồ uống", name: "Trà vải nhiệt đới", price: 30000, img: "https://images.unsplash.com/photo-1497534446932-c925b458314e?auto=format&fit=crop&w=300&q=80" },
+      { id: 8, category: "Đồ uống", name: "Matcha đá xay", price: 38000, img: "https://images.unsplash.com/photo-1515823064-d6e0c04616a7?auto=format&fit=crop&w=300&q=80" },
 
       // --- ĐỒ ĂN ---
-      { id: 9, category: "Đồ ăn", name: "Khoai tây chiên", price: 30000, img: makeDishSvg("#fef9c3", "#fef08a", "#eab308", "snack", "🍟") },
-      { id: 10, category: "Đồ ăn", name: "Xúc xích đức nướng", price: 25000, img: makeDishSvg("#fee2e2", "#fecaca", "#dc2626", "snack", "🌭") },
-      { id: 11, category: "Đồ ăn", name: "Gà viên chiên giòn", price: 35000, img: makeDishSvg("#ffedd5", "#fed7aa", "#ea580c", "snack", "🍗") },
-      { id: 12, category: "Đồ ăn", name: "Bánh mì bơ tỏi", price: 28000, img: makeDishSvg("#fef3c7", "#fde68a", "#d97706", "snack", "🥖") },
+      { id: 9, category: "Đồ ăn", name: "Khoai tây chiên", price: 30000, img: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=300&q=80" },
+      { id: 10, category: "Đồ ăn", name: "Xúc xích đức nướng", price: 25000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=300&q=80" },
+      { id: 11, category: "Đồ ăn", name: "Gà viên chiên giòn", price: 35000, img: "https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=300&q=80" },
+      { id: 12, category: "Đồ ăn", name: "Bánh mì bơ tỏi", price: 28000, img: "https://images.unsplash.com/photo-1619535860434-ba1d8fa12536?auto=format&fit=crop&w=300&q=80" },
 
       // --- MÌ CAY ---
-      { id: 13, category: "Mì cay", name: "Mì cay bò mỹ", price: 45000, img: makeDishSvg("#fee2e2", "#fca5a5", "#dc2626", "noodle", "🥩") },
-      { id: 14, category: "Mì cay", name: "Mì cay hải sản", price: 48000, img: makeDishSvg("#ffedd5", "#fdba74", "#ea580c", "noodle", "🦐") },
-      { id: 15, category: "Mì cay", name: "Mì cay xúc xích phô mai", price: 42000, img: makeDishSvg("#fef9c3", "#fde047", "#ef4444", "noodle", "🧀") },
-      { id: 16, category: "Mì cay", name: "Mì cay thập cẩm đặc biệt", price: 55000, img: makeDishSvg("#ffe4e6", "#fda4af", "#b91c1c", "noodle", "🍜") }
+      { id: 13, category: "Mì cay", name: "Mì cay bò mỹ", price: 45000, img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=300&q=80" },
+      { id: 14, category: "Mì cay", name: "Mì cay hải sản", price: 48000, img: "https://images.unsplash.com/photo-1617093727343-374698b1b08d?auto=format&fit=crop&w=300&q=80" },
+      { id: 15, category: "Mì cay", name: "Mì cay xúc xích phô mai", price: 42000, img: "https://images.unsplash.com/photo-1552611052-33e04de081de?auto=format&fit=crop&w=300&q=80" },
+      { id: 16, category: "Mì cay", name: "Mì cay thập cẩm đặc biệt", price: 55000, img: "https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&w=300&q=80" }
     ];
 
-    const FALLBACK_IMG = makeDishSvg("#f3f4f6", "#e5e7eb", "#6b7280", "snack", "🍽️");
+    function loadMenu() {
+      try {
+        const raw = localStorage.getItem(STORAGE_MENU_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        }
+      } catch (_) {}
+      return DEFAULT_MENU.map(function(m) { return Object.assign({}, m); });
+    }
 
+    let MENU = loadMenu();
     const cart = {};
     const itemNotes = {};
     let activeCategory = "all";
     let selectedMode = "";
+    let newDishUploadedImg = "";
+    let editingDishIdForFile = null;
 
     const orderBoxEl = document.getElementById("order-box");
     const tableSelectEl = document.getElementById("table-select");
@@ -632,66 +863,284 @@
     const supportPanelEl = document.getElementById("support-panel");
     const supportTableSelectEl = document.getElementById("support-table-select");
     const supportSendBtnEl = document.getElementById("support-send-btn");
+    const settingsPanelEl = document.getElementById("settings-panel");
+    const settingsBtnEl = document.getElementById("btn-toggle-settings");
+    const newDishPreviewEl = document.getElementById("new-dish-preview");
 
-    window.toggleSupportPanel = function(forceState) {
+    newDishPreviewEl.src = FALLBACK_SVG;
+
+    function saveMenuLocal() {
+      try {
+        localStorage.setItem(STORAGE_MENU_KEY, JSON.stringify(MENU));
+      } catch (e) {
+        alert("Bộ nhớ trình duyệt đang đầy (có thể do ảnh quá lớn). Hãy chọn ảnh nhỏ hơn hoặc dùng link URL ảnh.");
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function toggleSettingsPanel(forceState) {
+      const nextOpen = typeof forceState === "boolean"
+        ? forceState
+        : !settingsPanelEl.classList.contains("open");
+      settingsPanelEl.classList.toggle("open", nextOpen);
+      settingsBtnEl.classList.toggle("active", nextOpen);
+      if (nextOpen) {
+        supportPanelEl.classList.remove("open");
+        renderManageMenu();
+      }
+    }
+
+    function toggleSupportPanel(forceState) {
       const nextOpen = typeof forceState === "boolean"
         ? forceState
         : !supportPanelEl.classList.contains("open");
       supportPanelEl.classList.toggle("open", nextOpen);
       if (nextOpen) {
+        settingsPanelEl.classList.remove("open");
+        settingsBtnEl.classList.remove("active");
         supportTableSelectEl.value = "";
         supportTableSelectEl.focus();
       }
-    };
+    }
 
-    window.sendSupportCall = async function() {
-      const chosenTable = supportTableSelectEl.value.trim();
-      if (!chosenTable) {
-        alert("Vui lòng chọn số bàn (1 - 10) cần hỗ trợ!");
-        supportTableSelectEl.focus();
+    function onNewDishUrlInput() {
+      const urlVal = document.getElementById("new-dish-url").value.trim();
+      if (urlVal) {
+        newDishUploadedImg = "";
+        newDishPreviewEl.src = urlVal;
+      } else if (!newDishUploadedImg) {
+        newDishPreviewEl.src = FALLBACK_SVG;
+      }
+    }
+
+    function readCompressedImageFile(file, maxSize, cb) {
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement("canvas");
+          let w = img.width;
+          let h = img.height;
+          if (w > h && w > maxSize) {
+            h = Math.round((h * maxSize) / w);
+            w = maxSize;
+          } else if (h >= w && h > maxSize) {
+            w = Math.round((w * maxSize) / h);
+            h = maxSize;
+          }
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, w, h);
+          cb(canvas.toDataURL("image/jpeg", 0.78));
+        };
+        img.onerror = function() {
+          cb(ev.target.result);
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function onNewDishFileChange(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      readCompressedImageFile(file, 320, function(dataUrl) {
+        newDishUploadedImg = dataUrl;
+        document.getElementById("new-dish-url").value = "";
+        newDishPreviewEl.src = dataUrl;
+      });
+    }
+
+    function addNewDish() {
+      const cat = document.getElementById("new-dish-cat").value;
+      const name = document.getElementById("new-dish-name").value.trim();
+      const price = Number(document.getElementById("new-dish-price").value);
+      const urlVal = document.getElementById("new-dish-url").value.trim();
+
+      if (!name) {
+        alert("Vui lòng nhập tên món!");
+        document.getElementById("new-dish-name").focus();
+        return;
+      }
+      if (!Number.isFinite(price) || price <= 0) {
+        alert("Vui lòng nhập giá bán hợp lệ (lớn hơn 0)!");
+        document.getElementById("new-dish-price").focus();
         return;
       }
 
-      supportSendBtnEl.disabled = true;
-      supportSendBtnEl.innerText = "Đang gửi...";
+      const finalImg = newDishUploadedImg || urlVal || FALLBACK_SVG;
+      const maxId = MENU.reduce(function(m, item) { return Math.max(m, Number(item.id) || 0); }, 0);
 
-      try {
-        await push(ref(db, "staffCalls"), {
-          table: chosenTable,
-          message: `Bàn ${chosenTable} cần hỗ trợ`,
-          status: "pending",
-          createdAt: Date.now()
-        });
-        supportTableSelectEl.value = "";
-        supportPanelEl.classList.remove("open");
-        alert(`Đã gửi yêu cầu: Bàn ${chosenTable} cần hỗ trợ.`);
-      } catch (err) {
-        alert("Lỗi gửi gọi hỗ trợ: " + err.message);
-      } finally {
-        supportSendBtnEl.disabled = false;
-        supportSendBtnEl.innerText = "Gửi gọi hỗ trợ";
+      MENU.push({
+        id: maxId + 1,
+        category: cat,
+        name: name,
+        price: Math.round(price),
+        img: finalImg
+      });
+
+      saveMenuLocal();
+      document.getElementById("new-dish-name").value = "";
+      document.getElementById("new-dish-price").value = "";
+      document.getElementById("new-dish-url").value = "";
+      document.getElementById("new-dish-file").value = "";
+      newDishUploadedImg = "";
+      newDishPreviewEl.src = FALLBACK_SVG;
+
+      renderMenu();
+      renderManageMenu();
+      alert('Đã thêm món "' + name + '" vào mục ' + cat + '!');
+    }
+
+    function editDishPrice(id) {
+      const item = MENU.find(function(m) { return m.id === id; });
+      if (!item) return;
+      const nextPriceRaw = prompt('Nhập giá mới cho món "' + item.name + '" (VNĐ):', String(item.price));
+      if (nextPriceRaw === null) return;
+      const nextPrice = Number(nextPriceRaw.replace(/[^\d]/g, ""));
+      if (!Number.isFinite(nextPrice) || nextPrice <= 0) {
+        alert("Giá không hợp lệ!");
+        return;
       }
-    };
+      item.price = Math.round(nextPrice);
+      saveMenuLocal();
+      renderMenu();
+      renderManageMenu();
+    }
 
-    window.selectOrderMode = function(mode) {
+    function editDishImageUrl(id) {
+      const item = MENU.find(function(m) { return m.id === id; });
+      if (!item) return;
+      const nextUrl = prompt('Dán link ảnh mới (URL) cho món "' + item.name + '":', item.img.startsWith("data:") ? "" : item.img);
+      if (nextUrl === null) return;
+      const trimmed = nextUrl.trim();
+      if (!trimmed) {
+        alert("Link ảnh trống!");
+        return;
+      }
+      item.img = trimmed;
+      saveMenuLocal();
+      renderMenu();
+      renderManageMenu();
+    }
+
+    function triggerDishImageFile(id) {
+      editingDishIdForFile = id;
+      const fileInput = document.getElementById("edit-dish-file");
+      fileInput.value = "";
+      fileInput.click();
+    }
+
+    function onEditDishFileChange(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file || editingDishIdForFile === null) return;
+      const targetId = editingDishIdForFile;
+      editingDishIdForFile = null;
+
+      readCompressedImageFile(file, 320, function(dataUrl) {
+        const item = MENU.find(function(m) { return m.id === targetId; });
+        if (!item) return;
+        item.img = dataUrl;
+        saveMenuLocal();
+        renderMenu();
+        renderManageMenu();
+      });
+    }
+
+    function deleteDish(id) {
+      const item = MENU.find(function(m) { return m.id === id; });
+      if (!item) return;
+      if (!confirm('Xóa món "' + item.name + '" khỏi menu?')) return;
+      MENU = MENU.filter(function(m) { return m.id !== id; });
+      delete cart[id];
+      delete itemNotes[id];
+      saveMenuLocal();
+      renderMenu();
+      renderManageMenu();
+    }
+
+    function resetDefaultMenu() {
+      if (!confirm("Khôi phục lại toàn bộ 16 món mặc định như ban đầu?")) return;
+      MENU = DEFAULT_MENU.map(function(m) { return Object.assign({}, m); });
+      saveMenuLocal();
+      renderMenu();
+      renderManageMenu();
+    }
+
+    async function syncMenuToFirebase() {
+      if (typeof window.__setFirebaseMenu !== "function") {
+        alert("Đã lưu trên máy này. Chưa kết nối được Firebase để đồng bộ qua thiết bị khác.");
+        return;
+      }
+      try {
+        await window.__setFirebaseMenu(MENU);
+        alert("Đã lưu đồng bộ menu lên Firebase thành công!");
+      } catch (err) {
+        alert("Lỗi đồng bộ Firebase: " + err.message);
+      }
+    }
+
+    function renderManageMenu() {
+      const container = document.getElementById("manage-menu-list");
+      container.innerHTML = CATEGORIES.map(function(cat) {
+        const list = MENU.filter(function(m) { return m.category === cat; });
+        const rowsHtml = list.length
+          ? list.map(function(item) {
+              return (
+                '<div class="manage-item-row">' +
+                  '<div class="manage-item-info">' +
+                    '<img src="' + escapeHtml(item.img) + '" alt="' + escapeHtml(item.name) + '" class="manage-item-thumb" onerror="this.onerror=null;this.src=\'' + FALLBACK_SVG + '\';" />' +
+                    '<div>' +
+                      '<div style="font-weight:700;font-size:14px;">' + escapeHtml(item.name) + '</div>' +
+                      '<div style="font-size:13px;color:#16a34a;font-weight:700;">' + Number(item.price || 0).toLocaleString("vi-VN") + 'đ</div>' +
+                    '</div>' +
+                  '</div>' +
+                  '<div class="manage-item-btns">' +
+                    '<button type="button" class="btn-mini-edit" onclick="editDishPrice(' + item.id + ')">Sửa giá</button>' +
+                    '<button type="button" class="btn-mini-edit" onclick="editDishImageUrl(' + item.id + ')">Link ảnh</button>' +
+                    '<button type="button" class="btn-mini-edit" onclick="triggerDishImageFile(' + item.id + ')">Ảnh máy</button>' +
+                    '<button type="button" class="btn-mini-del" onclick="deleteDish(' + item.id + ')">Xóa</button>' +
+                  '</div>' +
+                '</div>'
+              );
+            }).join("")
+          : '<div style="font-size:13px;color:#6b7280;font-style:italic;margin-bottom:8px;">Chưa có món nào trong mục ' + escapeHtml(cat) + '.</div>';
+
+        return (
+          '<div class="manage-cat-group">' +
+            '<div class="manage-cat-title">• ' + escapeHtml(cat) + ' (' + list.length + ' món)</div>' +
+            rowsHtml +
+          '</div>'
+        );
+      }).join("");
+    }
+
+    function selectOrderMode(mode) {
       selectedMode = mode;
       orderBoxEl.classList.remove("alert-border");
       btnDineInEl.classList.toggle("active", mode === "dine_in");
       btnTakeawayEl.classList.toggle("active", mode === "takeaway");
       tableBigBoxEl.classList.toggle("visible", mode === "dine_in");
       syncTableTitle();
-
       if (mode === "dine_in") {
         tableSelectEl.focus();
       }
-    };
+    }
 
-    window.onSelectTable = function() {
+    function onSelectTable() {
       orderBoxEl.classList.remove("alert-border");
       syncTableTitle();
-    };
+    }
 
-    window.syncTableTitle = function() {
+    function syncTableTitle() {
       const titleEl = document.getElementById("table-title");
       if (!selectedMode) {
         titleEl.innerText = "XIN CHÀO BẠN DIỆP CHO NGHĨA ĐẸP TRAI XIN LỖI NHA";
@@ -702,36 +1151,27 @@
         return;
       }
       const val = tableSelectEl.value.trim();
-      titleEl.innerText = val ? `Tại quán · BÀN ${val}` : "Tại quán · Chưa chọn số bàn";
-    };
+      titleEl.innerText = val ? "Tại quán · BÀN " + val : "Tại quán · Chưa chọn số bàn";
+    }
 
-    window.setCategory = function(cat) {
+    function setCategory(cat) {
       activeCategory = cat;
-      document.querySelectorAll(".tab-btn").forEach(btn => {
+      document.querySelectorAll(".tab-btn").forEach(function(btn) {
         btn.classList.toggle("active", btn.dataset.cat === cat);
       });
       renderMenu();
-    };
+    }
 
-    window.changeQty = function(id, delta) {
+    function changeQty(id, delta) {
       const next = (cart[id] || 0) + delta;
       if (next <= 0) delete cart[id];
       else cart[id] = next;
       renderMenu();
-    };
+    }
 
-    window.updateItemNote = function(id, value) {
-      const trimmed = value.trim();
-      if (trimmed) itemNotes[id] = value;
+    function updateItemNote(id, value) {
+      if (value.trim()) itemNotes[id] = value;
       else delete itemNotes[id];
-    };
-
-    function escapeHtml(str = "") {
-      return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
     }
 
     function renderItemCard(item) {
@@ -743,50 +1183,38 @@
           ? "VD: ít đá, ít ngọt, mang ra trước..."
           : "VD: nhiều tương ớt, giòn kỹ...";
 
-      return `
-        <div class="card">
-          <div class="card-top">
-            <div class="item-left">
-              <img
-                src="${item.img}"
-                alt="${escapeHtml(item.name)}"
-                class="item-thumb"
-                loading="lazy"
-                onerror="this.onerror=null;this.src='${FALLBACK_IMG}';"
-              />
-              <div>
-                <div class="item-name">${escapeHtml(item.name)}</div>
-                <div class="item-price">${item.price.toLocaleString("vi-VN")}đ</div>
-              </div>
-            </div>
-            <div class="qty-controls">
-              <button type="button" class="btn-qty" onclick="changeQty(${item.id}, -1)">-</button>
-              <span class="qty-val">${qty}</span>
-              <button type="button" class="btn-qty" onclick="changeQty(${item.id}, 1)">+</button>
-            </div>
-          </div>
-          <div class="item-note-row">
-            <span class="item-note-label">Ghi chú món:</span>
-            <input
-              type="text"
-              class="item-note-input"
-              value="${escapeHtml(noteVal)}"
-              placeholder="${escapeHtml(placeholderNote)}"
-              oninput="updateItemNote(${item.id}, this.value)"
-            />
-          </div>
-        </div>
-      `;
+      return (
+        '<div class="card">' +
+          '<div class="card-top">' +
+            '<div class="item-left">' +
+              '<img src="' + escapeHtml(item.img) + '" alt="' + escapeHtml(item.name) + '" class="item-thumb" loading="lazy" onerror="this.onerror=null;this.src=\'' + FALLBACK_SVG + '\';" />' +
+              '<div>' +
+                '<div class="item-name">' + escapeHtml(item.name) + '</div>' +
+                '<div class="item-price">' + Number(item.price || 0).toLocaleString("vi-VN") + 'đ</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="qty-controls">' +
+              '<button type="button" class="btn-qty" onclick="changeQty(' + item.id + ', -1)">-</button>' +
+              '<span class="qty-val">' + qty + '</span>' +
+              '<button type="button" class="btn-qty" onclick="changeQty(' + item.id + ', 1)">+</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="item-note-row">' +
+            '<span class="item-note-label">Ghi chú món:</span>' +
+            '<input type="text" class="item-note-input" value="' + escapeHtml(noteVal) + '" placeholder="' + escapeHtml(placeholderNote) + '" oninput="updateItemNote(' + item.id + ', this.value)" />' +
+          '</div>' +
+        '</div>'
+      );
     }
 
     function renderMenu() {
       const box = document.getElementById("menu-list");
       const catsToShow = activeCategory === "all" ? CATEGORIES : [activeCategory];
 
-      box.innerHTML = catsToShow.map(cat => {
-        const itemsInCat = MENU.filter(m => m.category === cat);
+      box.innerHTML = catsToShow.map(function(cat) {
+        const itemsInCat = MENU.filter(function(m) { return m.category === cat; });
         const headingHtml = activeCategory === "all"
-          ? `<div class="category-heading">${escapeHtml(cat)}</div>`
+          ? '<div class="category-heading">' + escapeHtml(cat) + '</div>'
           : "";
         return headingHtml + itemsInCat.map(renderItemCard).join("");
       }).join("");
@@ -795,18 +1223,54 @@
     }
 
     function updateCartBar() {
-      let totalQty = 0, totalPrice = 0;
-      for (const [id, qty] of Object.entries(cart)) {
-        const item = MENU.find(m => m.id === Number(id));
+      let totalQty = 0;
+      let totalPrice = 0;
+      Object.keys(cart).forEach(function(id) {
+        const qty = cart[id];
+        const item = MENU.find(function(m) { return m.id === Number(id); });
         if (item) {
           totalQty += qty;
-          totalPrice += item.price * qty;
+          totalPrice += (Number(item.price) || 0) * qty;
         }
-      }
-      document.getElementById("cart-summary").innerText = `${totalQty} món - ${totalPrice.toLocaleString("vi-VN")}đ`;
+      });
+      document.getElementById("cart-summary").innerText = totalQty + " món - " + totalPrice.toLocaleString("vi-VN") + "đ";
     }
 
-    window.submitOrder = async function() {
+    async function sendSupportCall() {
+      const chosenTable = supportTableSelectEl.value.trim();
+      if (!chosenTable) {
+        alert("Vui lòng chọn số bàn (1 - 10) cần hỗ trợ!");
+        supportTableSelectEl.focus();
+        return;
+      }
+
+      if (typeof window.__pushFirebaseData !== "function") {
+        alert("Chưa kết nối được máy chủ quầy (vui lòng mở qua mạng/hosting thay vì mở file offline).");
+        return;
+      }
+
+      supportSendBtnEl.disabled = true;
+      supportSendBtnEl.innerText = "Đang gửi...";
+
+      try {
+        await window.__pushFirebaseData("staffCalls", {
+          table: chosenTable,
+          message: "Bàn " + chosenTable + " cần hỗ trợ",
+          status: "pending",
+          createdAt: Date.now()
+        });
+        supportTableSelectEl.value = "";
+        supportPanelEl.classList.remove("open");
+        alert("Đã gửi yêu cầu: Bàn " + chosenTable + " cần hỗ trợ.");
+      } catch (err) {
+        alert("Lỗi gửi gọi hỗ trợ: " + err.message);
+      } finally {
+        supportSendBtnEl.disabled = false;
+        supportSendBtnEl.innerText = "Gửi gọi hỗ trợ";
+      }
+    }
+
+    async function submitOrder() {
       if (!selectedMode) {
         orderBoxEl.classList.add("alert-border");
         alert("Bạn phải tự tay bấm chọn 'UỐNG / ĂN TẠI QUÁN' hoặc 'MANG VỀ' trước khi gửi đơn!");
@@ -821,16 +1285,16 @@
         return;
       }
 
-      const items = Object.entries(cart).map(([id, qty]) => {
+      const items = Object.keys(cart).map(function(id) {
         const numId = Number(id);
-        const item = MENU.find(m => m.id === numId);
+        const item = MENU.find(function(m) { return m.id === numId; });
         const dishNote = (itemNotes[numId] || "").trim();
         return {
           id: item.id,
           category: item.category,
           name: item.name,
-          price: item.price,
-          qty,
+          price: Number(item.price) || 0,
+          qty: cart[id],
           note: dishNote
         };
       });
@@ -840,34 +1304,39 @@
         return;
       }
 
+      if (typeof window.__pushFirebaseData !== "function") {
+        alert("Chưa kết nối được máy chủ quầy (vui lòng mở qua mạng/hosting thay vì mở file offline).");
+        return;
+      }
+
       const tableLabel = selectedMode === "takeaway" ? "Mang về" : rawTable;
       const modeText = selectedMode === "takeaway" ? "Mang về" : "Tại quán";
-      const total = items.reduce((sum, i) => sum + i.price * i.qty, 0);
+      const total = items.reduce(function(sum, i) { return sum + i.price * i.qty; }, 0);
       const orderNote = document.getElementById("order-note").value.trim();
       const btn = document.getElementById("send-btn");
       btn.disabled = true;
       btn.innerText = "Đang gửi...";
 
       try {
-        await push(ref(db, "orders"), {
+        await window.__pushFirebaseData("orders", {
           table: tableLabel,
           orderType: modeText,
-          items,
-          total,
+          items: items,
+          total: total,
           note: orderNote,
           status: "new",
           createdAt: Date.now()
         });
 
-        for (const k of Object.keys(cart)) delete cart[k];
-        for (const k of Object.keys(itemNotes)) delete itemNotes[k];
+        Object.keys(cart).forEach(function(k) { delete cart[k]; });
+        Object.keys(itemNotes).forEach(function(k) { delete itemNotes[k]; });
         document.getElementById("order-note").value = "";
         syncTableTitle();
         renderMenu();
         alert(
           selectedMode === "takeaway"
             ? "Đã gửi đơn MANG VỀ! Quầy đang tiếp nhận."
-            : `Đã gửi đơn TẠI QUÁN (Bàn ${rawTable})! Quầy đang tiếp nhận.`
+            : "Đã gửi đơn TẠI QUÁN (Bàn " + rawTable + ")! Quầy đang tiếp nhận."
         );
       } catch (err) {
         alert("Lỗi gửi đơn: " + err.message);
@@ -875,10 +1344,54 @@
         btn.disabled = false;
         btn.innerText = "Gửi đơn";
       }
+    }
+
+    window.__applyRemoteMenu = function(remoteMenu) {
+      if (Array.isArray(remoteMenu) && remoteMenu.length > 0) {
+        MENU = remoteMenu;
+        saveMenuLocal();
+        renderMenu();
+        if (settingsPanelEl.classList.contains("open")) {
+          renderManageMenu();
+        }
+      }
     };
 
     syncTableTitle();
     renderMenu();
+  </script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, push, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBghiBbYsyo7F5AjWgcQqcCXyoVHi5nVz8",
+      authDomain: "mohinhquan.firebaseapp.com",
+      databaseURL: "https://mohinhquan-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "mohinhquan",
+      storageBucket: "mohinhquan.firebasestorage.app",
+      messagingSenderId: "557675172063",
+      appId: "1:557675172063:web:baf9433c28328878dbd96a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    window.__pushFirebaseData = function(path, payload) {
+      return push(ref(db, path), payload);
+    };
+
+    window.__setFirebaseMenu = function(menuArray) {
+      return set(ref(db, "menuConfig"), menuArray);
+    };
+
+    onValue(ref(db, "menuConfig"), function(snapshot) {
+      const val = snapshot.val();
+      if (Array.isArray(val) && val.length > 0 && typeof window.__applyRemoteMenu === "function") {
+        window.__applyRemoteMenu(val);
+      }
+    });
   </script>
 </body>
 </html>
