@@ -1,5 +1,3 @@
-https://mohinhbanhang.vercel.app/: link gọi món
-https://mohinhbanhang-dtst.vercel.app/kitchen.html: link tiếp nhận 
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -10,29 +8,78 @@ https://mohinhbanhang-dtst.vercel.app/kitchen.html: link tiếp nhận
     body { font-family: Arial, sans-serif; margin: 0; padding: 16px; background: #0f172a; color: #f8fafc; }
     .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
     .sound-btn { padding: 10px 14px; border: none; border-radius: 8px; background: #38bdf8; color: #082f49; font-weight: bold; cursor: pointer; }
+    .sound-btn:hover { background: #0ea5e9; }
+
+    .section-title { font-size: 16px; font-weight: bold; margin: 20px 0 12px 0; padding-bottom: 8px; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .count-pill { background: #334155; color: #f8fafc; padding: 2px 8px; border-radius: 99px; font-size: 13px; }
+    .count-pill.active { background: #22c55e; color: #052e16; }
+
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; }
-    .order-card { background: #1e293b; border-left: 5px solid #22c55e; border-radius: 10px; padding: 14px; }
-    .order-card.making { border-left-color: #f59e0b; }
-    .order-card.done { border-left-color: #64748b; opacity: 0.65; }
+    .order-card { background: #1e293b; border-left: 5px solid #22c55e; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; }
+    .order-card.done { border-left-color: #64748b; opacity: 0.78; background: #162032; }
+
     .badge { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; background: #22c55e; color: #052e16; }
-    .making .badge { background: #f59e0b; color: #451a03; }
     .done .badge { background: #64748b; color: #fff; }
+
     .mode-tag { display: inline-block; margin-left: 6px; padding: 2px 7px; border-radius: 5px; font-size: 11px; font-weight: bold; background: #334155; color: #e2e8f0; vertical-align: middle; }
     .item-note { color: #7dd3fc; font-size: 12px; margin-top: 2px; }
     .order-note { color: #fde047; font-size: 13px; margin-bottom: 8px; padding: 6px 8px; background: rgba(253, 224, 71, 0.08); border-radius: 6px; }
-    .actions button { margin-top: 10px; margin-right: 6px; padding: 7px 11px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+
+    .actions { margin-top: 12px; display: flex; gap: 8px; }
+    .actions button { flex: 1; padding: 9px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; }
+    .btn-done { background: #22c55e; color: #052e16; }
+    .btn-done:hover { background: #16a34a; }
+    .btn-undo { background: #334155; color: #cbd5e1; }
+    .btn-undo:hover { background: #475569; }
+    .empty-msg { color: #64748b; font-style: italic; font-size: 14px; padding: 10px 0; }
+
+    /* Thư mục lưu đơn theo ngày */
+    .day-folder { background: #131c31; border: 1px solid #293548; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+    .day-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .day-title { font-size: 15px; font-weight: bold; color: #e2e8f0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .day-meta { font-size: 13px; color: #94a3b8; font-weight: normal; }
+    .day-controls { display: flex; gap: 8px; align-items: center; }
+    .btn-toggle { padding: 6px 11px; border: 1px solid #334155; border-radius: 6px; background: #1e293b; color: #e2e8f0; cursor: pointer; font-size: 13px; font-weight: bold; }
+    .btn-toggle:hover { background: #334155; }
+    .btn-delete-day { padding: 6px 11px; border: none; border-radius: 6px; background: #dc2626; color: #fff; cursor: pointer; font-size: 13px; font-weight: bold; }
+    .btn-delete-day:hover { background: #b91c1c; }
+    .day-orders { margin-top: 12px; display: none; }
+    .day-orders.open { display: grid; }
   </style>
 </head>
 <body>
   <div class="top">
-    <h2 style="margin:0;">QUẦY TIẾP NHẬN ĐƠN </h2>
-    <button class="sound-btn" onclick="enableSound()">Bật chuông báo đơn</button>
+    <div>
+      <h2 style="margin:0;">QUẦY TIẾP NHẬN ĐƠN</h2>
+      <div id="today-label" style="font-size:13px; color:#94a3b8; margin-top:4px;"></div>
+    </div>
+    <button class="sound-btn" onclick="enableSound()">🔔 Bật chuông báo đơn</button>
   </div>
-  <div id="orders-grid" class="grid"></div>
+
+  <!-- Hôm nay: Đơn Mới -->
+  <div class="section-title">
+    <span>🟢 ĐƠN MỚI (HÔM NAY)</span>
+    <span id="new-count" class="count-pill active">0</span>
+  </div>
+  <div id="new-orders-grid" class="grid"></div>
+
+  <!-- Hôm nay: Đã Xong -->
+  <div class="section-title" style="margin-top: 28px;">
+    <span>⚪ ĐÃ XONG (HÔM NAY)</span>
+    <span id="done-count" class="count-pill">0</span>
+  </div>
+  <div id="done-orders-grid" class="grid"></div>
+
+  <!-- Thư mục đơn các ngày trước -->
+  <div class="section-title" style="margin-top: 34px;">
+    <span>📁 THƯ MỤC ĐƠN THEO NGÀY</span>
+    <span id="archive-days-count" class="count-pill">0 ngày</span>
+  </div>
+  <div id="archive-days-container"></div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBghiBbYsyo7F5AjWgcQqcCXyoVHi5nVz8",
@@ -50,6 +97,29 @@ https://mohinhbanhang-dtst.vercel.app/kitchen.html: link tiếp nhận
     let soundEnabled = false;
     let isFirstLoad = true;
     const knownIds = new Set();
+    let latestOrdersData = {};
+    const expandedDays = new Set();
+
+    // Khóa ngày theo giờ địa phương: YYYY-MM-DD
+    function getDateKey(ts) {
+      const d = ts ? new Date(ts) : new Date();
+      if (Number.isNaN(d.getTime())) return getDateKey(Date.now());
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+
+    // Định dạng hiển thị: DD/MM/YYYY
+    function formatDateVN(dateKey) {
+      const [y, m, d] = dateKey.split("-");
+      return `${d}/${m}/${y}`;
+    }
+
+    function updateTodayHeader() {
+      const todayKey = getDateKey(Date.now());
+      document.getElementById("today-label").textContent = `Hôm nay: ${formatDateVN(todayKey)} — Tự động chuyển sang thư mục ngày sau 00:00`;
+    }
 
     function escapeHtml(str = "") {
       return String(str)
@@ -80,59 +150,179 @@ https://mohinhbanhang-dtst.vercel.app/kitchen.html: link tiếp nhận
     }
 
     window.setStatus = function(orderId, status) {
-      update(ref(db, `orders/${orderId}`), { status });
+      const payload = { status };
+      if (status === "done") {
+        payload.completedAt = Date.now();
+      }
+      update(ref(db, `orders/${orderId}`), payload);
     };
 
-    onValue(ref(db, "orders"), (snapshot) => {
-      const data = snapshot.val() || {};
-      const list = Object.entries(data).map(([id, val]) => ({ id, ...val }));
-      list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-
-      let hasNewOrder = false;
-      for (const o of list) {
-        if (!knownIds.has(o.id)) {
-          knownIds.add(o.id);
-          if (!isFirstLoad && o.status === "new") hasNewOrder = true;
-        }
+    window.toggleDayFolder = function(dateKey) {
+      if (expandedDays.has(dateKey)) {
+        expandedDays.delete(dateKey);
+      } else {
+        expandedDays.add(dateKey);
       }
-      isFirstLoad = false;
-      if (hasNewOrder) playBeep();
+      renderAll(latestOrdersData);
+    };
 
-      const statusLabel = { new: "ĐƠN MỚI", making: "ĐANG PHA", done: "ĐÃ XONG" };
-      const grid = document.getElementById("orders-grid");
+    window.deleteDayOrders = async function(dateKey) {
+      const label = formatDateVN(dateKey);
+      const targetIds = Object.entries(latestOrdersData)
+        .filter(([, val]) => getDateKey(val.createdAt || val.completedAt || Date.now()) === dateKey)
+        .map(([id]) => id);
 
-      grid.innerHTML = list.map(o => {
-        const tableText = escapeHtml(o.table || "Mang về");
-        const modeText = o.orderType ? `<span class="mode-tag">${escapeHtml(o.orderType)}</span>` : "";
-        const itemsHtml = (o.items || []).map(i => `
-          <li style="margin-bottom:6px;">
-            <div><strong>${escapeHtml(i.qty)}x</strong> ${escapeHtml(i.name)}</div>
-            ${i.note ? `<div class="item-note">↳ Ghi chú món: ${escapeHtml(i.note)}</div>` : ""}
-          </li>
-        `).join("");
+      if (!targetIds.length) return;
 
-        return `
-          <div class="order-card ${escapeHtml(o.status || 'new')}">
+      const ok = confirm(`Bạn có chắc muốn xóa toàn bộ ${targetIds.length} đơn của ngày ${label}? Hành động này không thể hoàn tác.`);
+      if (!ok) return;
+
+      try {
+        await Promise.all(targetIds.map(id => remove(ref(db, `orders/${id}`))));
+        expandedDays.delete(dateKey);
+      } catch (err) {
+        alert("Lỗi khi xóa dữ liệu ngày: " + err.message);
+      }
+    };
+
+    function renderOrderCard(o) {
+      const isDone = o.status === "done";
+      const tableText = escapeHtml(o.table || "Mang về");
+      const modeText = o.orderType ? `<span class="mode-tag">${escapeHtml(o.orderType)}</span>` : "";
+      const timeText = o.createdAt
+        ? new Date(o.createdAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
+        : "";
+
+      const itemsHtml = (o.items || []).map(i => `
+        <li style="margin-bottom:6px;">
+          <div><strong>${escapeHtml(i.qty)}x</strong> ${escapeHtml(i.name)}</div>
+          ${i.note ? `<div class="item-note">↳ Ghi chú món: ${escapeHtml(i.note)}</div>` : ""}
+        </li>
+      `).join("");
+
+      return `
+        <div class="order-card ${isDone ? 'done' : 'new'}">
+          <div>
             <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
               <div>
                 <strong style="font-size:18px;">Bàn: ${tableText}</strong>
                 ${modeText}
               </div>
-              <span class="badge">${statusLabel[o.status] || "ĐƠN MỚI"}</span>
+              <span class="badge">${isDone ? "ĐÃ XONG" : "ĐƠN MỚI"}</span>
             </div>
+            ${timeText ? `<div style="font-size:12px; color:#94a3b8; margin-top:4px;">Lúc ${timeText}</div>` : ""}
             <ul style="padding-left:18px; margin:10px 0;">
               ${itemsHtml}
             </ul>
             ${o.note ? `<div class="order-note">Ghi chú đơn: ${escapeHtml(o.note)}</div>` : ""}
+          </div>
+
+          <div>
             <div style="font-weight:bold;">Tổng: ${(o.total || 0).toLocaleString("vi-VN")}đ</div>
             <div class="actions">
-              <button style="background:#f59e0b;color:#111;" onclick="setStatus('${o.id}', 'making')">Đang pha</button>
-              <button style="background:#22c55e;color:#111;" onclick="setStatus('${o.id}', 'done')">Hoàn tất</button>
+              ${isDone
+                ? `<button class="btn-undo" onclick="setStatus('${o.id}', 'new')">↩ Khôi phục lại đơn mới</button>`
+                : `<button class="btn-done" onclick="setStatus('${o.id}', 'done')">✔ Hoàn tất</button>`
+              }
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderAll(data) {
+      updateTodayHeader();
+      const todayKey = getDateKey(Date.now());
+
+      const list = Object.entries(data || {}).map(([id, val]) => ({ id, ...val }));
+      list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+      // Đơn của ngày hôm nay
+      const todayOrders = list.filter(o => getDateKey(o.createdAt || o.completedAt || Date.now()) === todayKey);
+      const newOrders = todayOrders.filter(o => o.status !== "done");
+      const doneOrders = todayOrders.filter(o => o.status === "done");
+
+      document.getElementById("new-count").textContent = newOrders.length;
+      document.getElementById("done-count").textContent = doneOrders.length;
+
+      document.getElementById("new-orders-grid").innerHTML = newOrders.length
+        ? newOrders.map(renderOrderCard).join("")
+        : `<div class="empty-msg">Hiện không có đơn mới nào hôm nay.</div>`;
+
+      document.getElementById("done-orders-grid").innerHTML = doneOrders.length
+        ? doneOrders.map(renderOrderCard).join("")
+        : `<div class="empty-msg">Chưa có đơn nào hoàn tất hôm nay.</div>`;
+
+      // Gom các đơn của những ngày khác vào thư mục theo ngày (mới nhất lên trước)
+      const archiveOrders = list.filter(o => getDateKey(o.createdAt || o.completedAt || Date.now()) !== todayKey);
+      const groupedByDay = new Map();
+
+      for (const order of archiveOrders) {
+        const dKey = getDateKey(order.createdAt || order.completedAt || Date.now());
+        if (!groupedByDay.has(dKey)) groupedByDay.set(dKey, []);
+        groupedByDay.get(dKey).push(order);
+      }
+
+      const sortedDays = Array.from(groupedByDay.keys()).sort((a, b) => b.localeCompare(a));
+      document.getElementById("archive-days-count").textContent = `${sortedDays.length} ngày`;
+
+      const archiveContainer = document.getElementById("archive-days-container");
+      if (!sortedDays.length) {
+        archiveContainer.innerHTML = `<div class="empty-msg">Chưa có thư mục đơn của các ngày trước.</div>`;
+        return;
+      }
+
+      archiveContainer.innerHTML = sortedDays.map(dateKey => {
+        const dayList = groupedByDay.get(dateKey) || [];
+        const dayTotal = dayList.reduce((sum, item) => sum + (Number(item.total) || 0), 0);
+        const isOpen = expandedDays.has(dateKey);
+
+        return `
+          <div class="day-folder">
+            <div class="day-header">
+              <div class="day-title">
+                <span>📅 Ngày ${formatDateVN(dateKey)}</span>
+                <span class="day-meta">(${dayList.length} đơn • Tổng: ${dayTotal.toLocaleString("vi-VN")}đ)</span>
+              </div>
+              <div class="day-controls">
+                <button class="btn-toggle" onclick="toggleDayFolder('${dateKey}')">
+                  ${isOpen ? "▲ Thu gọn" : "▼ Xem đơn"}
+                </button>
+                <button class="btn-delete-day" onclick="deleteDayOrders('${dateKey}')">
+                  🗑 Xóa ngày này
+                </button>
+              </div>
+            </div>
+            <div class="grid day-orders ${isOpen ? "open" : ""}">
+              ${dayList.map(renderOrderCard).join("")}
             </div>
           </div>
         `;
       }).join("");
+    }
+
+    onValue(ref(db, "orders"), (snapshot) => {
+      const data = snapshot.val() || {};
+      latestOrdersData = data;
+
+      const list = Object.entries(data).map(([id, val]) => ({ id, ...val }));
+      let hasNewOrder = false;
+      for (const o of list) {
+        if (!knownIds.has(o.id)) {
+          knownIds.add(o.id);
+          if (!isFirstLoad && (!o.status || o.status === "new")) hasNewOrder = true;
+        }
+      }
+      isFirstLoad = false;
+      if (hasNewOrder) playBeep();
+
+      renderAll(data);
     });
+
+    // Tự động làm mới ranh giới ngày khi bước sang 00:00
+    setInterval(() => {
+      renderAll(latestOrdersData);
+    }, 30000);
   </script>
 </body>
 </html>
