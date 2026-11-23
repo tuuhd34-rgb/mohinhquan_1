@@ -21,9 +21,22 @@
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
       margin: 0;
-      padding: 14px 14px 245px;
+      padding: 14px 14px 250px;
       background: var(--bg);
       color: var(--text);
+    }
+
+    #error-banner {
+      display: none;
+      background: #fef2f2;
+      border: 1.5px solid #ef4444;
+      color: #991b1b;
+      padding: 10px 12px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: pre-wrap;
     }
 
     .header {
@@ -44,7 +57,7 @@
 
     .header-title {
       margin: 4px 0 0;
-      font-size: 21px;
+      font-size: 20px;
       font-weight: 700;
     }
 
@@ -56,7 +69,7 @@
       position: sticky;
       top: 8px;
       z-index: 20;
-      background: rgba(244, 245, 247, 0.92);
+      background: rgba(244, 245, 247, 0.95);
       backdrop-filter: blur(6px);
       padding: 6px;
       border-radius: 12px;
@@ -86,9 +99,6 @@
       font-size: 16px;
       font-weight: 700;
       color: #1f2937;
-      display: flex;
-      align-items: center;
-      gap: 6px;
     }
 
     .card {
@@ -142,7 +152,6 @@
       margin-top: 4px;
     }
 
-    /* Làm to mục chọn số lượng và số lượng */
     .qty-controls {
       display: flex;
       align-items: center;
@@ -341,7 +350,6 @@
       font-weight: 800;
     }
 
-    /* Làm to chữ và nút Gửi đơn */
     .send-btn {
       background: var(--accent);
       color: var(--accent-text);
@@ -366,16 +374,18 @@
   </style>
 </head>
 <body>
+  <div id="error-banner"></div>
+
   <div class="header">
     <div class="header-sub">Menu gọi món tại quầy</div>
-    <h2 id="table-title" class="header-title">kinh chao quy khach</h2>
+    <h2 id="table-title" class="header-title">Kính chào quý khách</h2>
   </div>
 
   <div class="tabs">
-    <button class="tab-btn active" data-cat="all" onclick="setCategory('all')">Tất cả</button>
-    <button class="tab-btn" data-cat="Đồ uống" onclick="setCategory('Đồ uống')">Đồ uống</button>
-    <button class="tab-btn" data-cat="Đồ ăn" onclick="setCategory('Đồ ăn')">Đồ ăn</button>
-    <button class="tab-btn" data-cat="Mì cay" onclick="setCategory('Mì cay')">Mì cay</button>
+    <button type="button" class="tab-btn active" data-cat="all" onclick="setCategory('all')">Tất cả</button>
+    <button type="button" class="tab-btn" data-cat="Đồ uống" onclick="setCategory('Đồ uống')">Đồ uống</button>
+    <button type="button" class="tab-btn" data-cat="Đồ ăn" onclick="setCategory('Đồ ăn')">Đồ ăn</button>
+    <button type="button" class="tab-btn" data-cat="Mì cay" onclick="setCategory('Mì cay')">Mì cay</button>
   </div>
 
   <div id="menu-list"></div>
@@ -429,40 +439,52 @@
 
     <div class="cart-row">
       <span id="cart-summary" class="cart-summary">0 món - 0đ</span>
-      <button id="send-btn" class="send-btn" onclick="submitOrder()">Gửi đơn</button>
+      <button id="send-btn" type="button" class="send-btn" onclick="submitOrder()">Gửi đơn</button>
     </div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+  <!-- Script giao diện & giỏ hàng chạy độc lập ngay lập tức -->
+  <script>
+    (function () {
+      const CATEGORIES = ["Đồ uống", "Đồ ăn", "Mì cay"];
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBghiBbYsyo7F5AjWgcQqcCXyoVHi5nVz8",
-      authDomain: "mohinhquan.firebaseapp.com",
-      databaseURL: "https://mohinhquan-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "mohinhquan",
-      storageBucket: "mohinhquan.firebasestorage.app",
-      messagingSenderId: "557675172063",
-      appId: "1:557675172063:web:baf9433c28328878dbd96a"
-    };
+      const SVG_FALLBACK =
+        "data:image/svg+xml;utf8," +
+        encodeURIComponent(
+          '<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">' +
+            '<rect width="120" height="120" rx="16" fill="#e5e7eb"/>' +
+            '<text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#4b5563">MON NGON</text>' +
+          "</svg>"
+        );
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+      const MENU = [
+        // --- ĐỒ UỐNG ---
+        { id: 1, category: "Đồ uống", name: "Cà phê đen đá", price: 20000, image: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=240&q=75" },
+        { id: 2, category: "Đồ uống", name: "Cà phê sữa đá", price: 25000, image: "https://images.unsplash.com/photo-1572442388796-11668a67e53d?auto=format&fit=crop&w=240&q=75" },
+        { id: 3, category: "Đồ uống", name: "Bạc xỉu", price: 28000, image: "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=240&q=75" },
+        { id: 4, category: "Đồ uống", name: "Cà phê muối", price: 32000, image: "https://images.unsplash.com/photo-1517701604599-bb29b565090c?auto=format&fit=crop&w=240&q=75" },
+        { id: 5, category: "Đồ uống", name: "Trà đào cam sả", price: 30000, image: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=240&q=75" },
+        { id: 6, category: "Đồ uống", name: "Trà chanh", price: 18000, image: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=240&q=75" },
+        { id: 7, category: "Đồ uống", name: "Trà vải nhiệt đới", price: 30000, image: "https://images.unsplash.com/photo-1499638673689-79a0b5115d87?auto=format&fit=crop&w=240&q=75" },
+        { id: 8, category: "Đồ uống", name: "Matcha đá xay", price: 38000, image: "https://images.unsplash.com/photo-1515823064-d6e0c04616a7?auto=format&fit=crop&w=240&q=75" },
 
-    const CATEGORIES = ["Đồ uống", "Đồ ăn", "Mì cay"];
+        // --- ĐỒ ĂN ---
+        { id: 9, category: "Đồ ăn", name: "Khoai tây chiên", price: 30000, image: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=240&q=75" },
+        { id: 10, category: "Đồ ăn", name: "Xúc xích đức nướng", price: 25000, image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=240&q=75" },
+        { id: 11, category: "Đồ ăn", name: "Gà viên chiên giòn", price: 35000, image: "https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=240&q=75" },
+        { id: 12, category: "Đồ ăn", name: "Bánh mì bơ tỏi", price: 28000, image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=240&q=75" },
 
-    const FALLBACK_IMAGES = {
-      "Đồ uống": "https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=240&q=75",
-      "Đồ ăn": "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=240&q=75",
-      "Mì cay": "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=240&q=75"
-    };
+        // --- MÌ CAY ---
+        { id: 13, category: "Mì cay", name: "Mì cay bò mỹ", price: 45000, image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=240&q=75" },
+        { id: 14, category: "Mì cay", name: "Mì cay hải sản", price: 48000, image: "https://images.unsplash.com/photo-1617093727343-374698b1b08d?auto=format&fit=crop&w=240&q=75" },
+        { id: 15, category: "Mì cay", name: "Mì cay xúc xích phô mai", price: 42000, image: "https://images.unsplash.com/photo-1552611052-33e04de081de?auto=format&fit=crop&w=240&q=75" },
+        { id: 16, category: "Mì cay", name: "Mì cay thập cẩm đặc biệt", price: 55000, image: "https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&w=240&q=75" }
+      ];
 
-    const MENU = [
-      // --- ĐỒ UỐNG ---
-      { id: 1, category: "Đồ uống", name: "Cà phê đen đá", price: 20000, image: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=240&q=75" },
-      { id: 2, category: "Đồ uống", name: "Cà phê sữa đá", price: 25000, image: "https://images.unsplash.com/photo-1572442388796-11668a67e53d?auto=format&fit=crop&w=240&q=75" },
-      { id: 3, category: "Đồ uống", name: "Bạc xỉu", price: 28000, image: "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=240&q=75" },
-      { id: 4, category: "Đồ uống", name: "Cà phê muối", price: 32000, image: "https://images.unsplash.com/photo-1517701604599-bb29b565090c?auto=format&fit=crop&w=240&q=75" },
-      { id: 5, category: "Đồ uống", name: "Trà đào cam sả", price: 30000, image: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=240&q=75" },
-      { id: 6, category: "Đồ uống", name: "Trà chanh", price: 18000, image: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=240&q=75" },
+      const cart = {};
+      const itemNotes = {};
+      let activeCategory = "all";
+      let selectedMode = "";
+
+      const orderBoxEl = document.getElementById("order-box");
+      const tableSelectEl
