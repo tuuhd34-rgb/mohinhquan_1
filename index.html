@@ -3,31 +3,401 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gọi Món Tại Bàn</title>
+ 
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 16px; background: #f4f4f5; color: #111; }
-    .header { background: #111; color: #fff; padding: 14px 16px; border-radius: 12px; margin-bottom: 14px; }
-    .card { background: #fff; padding: 12px 14px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-    .btn { padding: 8px 13px; border: none; border-radius: 8px; background: #18181b; color: #fff; font-size: 15px; cursor: pointer; }
-    .note-box { width: 100%; box-sizing: border-box; padding: 10px; border-radius: 10px; border: 1px solid #d4d4d8; margin-top: 8px; background: #fff; }
-    .cart-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #111; color: #fff; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; }
-    .send-btn { background: #22c55e; color: #052e16; font-weight: bold; padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; }
+    :root {
+      --bg: #f4f5f7;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --primary: #111827;
+      --accent: #16a34a;
+      --accent-text: #ffffff;
+      --border: #e5e7eb;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      margin: 0;
+      padding: 14px 14px 235px;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .header {
+      background: linear-gradient(135deg, #111827, #1f2937);
+      color: #fff;
+      padding: 16px;
+      border-radius: 14px;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .header-sub {
+      font-size: 12px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      opacity: 0.75;
+    }
+
+    .header-title {
+      margin: 4px 0 0;
+      font-size: 21px;
+      font-weight: 700;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+      position: sticky;
+      top: 8px;
+      z-index: 20;
+      background: rgba(244, 245, 247, 0.92);
+      backdrop-filter: blur(6px);
+      padding: 6px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .tab-btn {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      padding: 9px 6px;
+      border-radius: 9px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .tab-btn.active {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.14);
+    }
+
+    .category-heading {
+      margin: 16px 0 8px;
+      font-size: 15px;
+      font-weight: 700;
+      color: #1f2937;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card {
+      background: var(--card);
+      padding: 12px 14px;
+      border-radius: 14px;
+      margin-bottom: 10px;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .item-name {
+      font-weight: 700;
+      font-size: 15px;
+      line-height: 1.3;
+    }
+
+    .item-price {
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 14px;
+      margin-top: 3px;
+    }
+
+    .qty-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .btn-qty {
+      width: 32px;
+      height: 32px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background: #f9fafb;
+      color: #111827;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-qty:active {
+      transform: scale(0.95);
+    }
+
+    .qty-val {
+      min-width: 22px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    .item-note-row {
+      margin-top: 10px;
+      padding-top: 9px;
+      border-top: 1px dashed #e5e7eb;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .item-note-label {
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+      font-weight: 600;
+    }
+
+    .item-note-input {
+      flex: 1;
+      padding: 7px 10px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      font-size: 13px;
+      background: #fafafa;
+      color: var(--text);
+    }
+
+    .item-note-input:focus,
+    .table-select-big:focus,
+    .note-box:focus {
+      outline: none;
+      border-color: #111827;
+      background: #fff;
+    }
+
+    .note-box {
+      width: 100%;
+      padding: 11px 12px;
+      border-radius: 12px;
+      border: 1px solid #d1d5db;
+      margin-top: 8px;
+      background: #fff;
+      font-size: 14px;
+    }
+
+    /* Khu vực đặt đơn & chọn bàn cố định phía dưới */
+    .bottom-panel {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      border-top: 2px solid #111827;
+      padding: 12px 14px 14px;
+      box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.12);
+      z-index: 30;
+    }
+
+    .order-box {
+      background: #f8fafc;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+    }
+
+    .order-box.alert-border {
+      border-color: #dc2626;
+      background: #fef2f2;
+    }
+
+    .order-step-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #111827;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .order-step-title span.req {
+      color: #dc2626;
+      font-size: 12px;
+    }
+
+    .mode-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .mode-choice-btn {
+      padding: 11px 12px;
+      border-radius: 10px;
+      border: 2px solid #cbd5e1;
+      background: #ffffff;
+      color: #111827;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .mode-choice-btn.active {
+      background: #111827;
+      color: #ffffff;
+      border-color: #111827;
+      box-shadow: 0 3px 10px rgba(17, 24, 39, 0.2);
+    }
+
+    .table-big-box {
+      display: none;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed #cbd5e1;
+    }
+
+    .table-big-box.visible {
+      display: block;
+    }
+
+    .table-big-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 800;
+      color: #111827;
+      margin-bottom: 6px;
+    }
+
+    .table-big-label span {
+      color: #dc2626;
+    }
+
+    .table-select-big {
+      width: 100%;
+      padding: 13px 14px;
+      border-radius: 10px;
+      border: 2px solid #111827;
+      font-size: 18px;
+      font-weight: 800;
+      color: #111827;
+      background-color: #ffffff;
+      cursor: pointer;
+    }
+
+    .cart-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #111827;
+      color: #fff;
+      padding: 12px 14px;
+      border-radius: 12px;
+      gap: 10px;
+    }
+
+    .cart-summary {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .send-btn {
+      background: var(--accent);
+      color: var(--accent-text);
+      font-weight: 800;
+      font-size: 15px;
+      padding: 11px 18px;
+      border: none;
+      border-radius: 9px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .send-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
   <div class="header">
-    <div style="font-size: 13px; opacity: 0.8;">MENU GỌI MÓN NHANH</div>
-    <h2 id="table-title" style="margin: 4px 0 0;">Bàn ...</h2>
+    <div class="header-sub">Menu gọi món tại quầy</div>
+    <h2 id="table-title" class="header-title">kinh chao quy khach</h2>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-cat="all" onclick="setCategory('all')">Tất cả</button>
+    <button class="tab-btn" data-cat="Đồ uống" onclick="setCategory('Đồ uống')">Đồ uống</button>
+    <button class="tab-btn" data-cat="Đồ ăn" onclick="setCategory('Đồ ăn')">Đồ ăn</button>
+    <button class="tab-btn" data-cat="Mì cay" onclick="setCategory('Mì cay')">Mì cay</button>
   </div>
 
   <div id="menu-list"></div>
 
-  <input id="order-note" class="note-box" type="text" placeholder="Ghi chú thêm (vd: ít đá, ít ngọt, mang ra nhanh)..." />
+  <input
+    id="order-note"
+    class="note-box"
+    type="text"
+    placeholder="Ghi chú chung cho cả đơn (vd: mang ra cùng lúc, lấy thêm đũa/túi)..."
+  />
 
-  <div style="height: 80px;"></div>
-  <div class="cart-bar">
-    <span id="cart-summary">0 món - 0đ</span>
-    <button id="send-btn" class="send-btn" onclick="submitOrder()">Gửi đơn</button>
+  <div class="bottom-panel">
+    <div id="order-box" class="order-box">
+      <div class="order-step-title">
+        <span>1. Chọn hình thức đặt đơn (bắt buộc nhấn chọn):</span>
+        <span class="req">* Bắt buộc</span>
+      </div>
+
+      <div class="mode-grid">
+        <button id="btn-dine-in" type="button" class="mode-choice-btn" onclick="selectOrderMode('dine_in')">
+          UỐNG / ĂN TẠI QUÁN
+        </button>
+        <button id="btn-takeaway" type="button" class="mode-choice-btn" onclick="selectOrderMode('takeaway')">
+          MANG VỀ
+        </button>
+      </div>
+
+      <div id="table-big-box" class="table-big-box">
+        <label for="table-select" class="table-big-label">
+          2. Chọn số bàn (1 – 10) <span>*</span>:
+        </label>
+        <select
+          id="table-select"
+          class="table-select-big"
+          onchange="onSelectTable()"
+        >
+          <option value="">-- Kích vào đây để chọn bàn (1 - 10) --</option>
+          <option value="1">Bàn 1</option>
+          <option value="2">Bàn 2</option>
+          <option value="3">Bàn 3</option>
+          <option value="4">Bàn 4</option>
+          <option value="5">Bàn 5</option>
+          <option value="6">Bàn 6</option>
+          <option value="7">Bàn 7</option>
+          <option value="8">Bàn 8</option>
+          <option value="9">Bàn 9</option>
+          <option value="10">Bàn 10</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="cart-row">
+      <span id="cart-summary" class="cart-summary">0 món - 0đ</span>
+      <button id="send-btn" class="send-btn" onclick="submitOrder()">Gửi đơn</button>
+    </div>
   </div>
 
   <script type="module">
@@ -47,18 +417,84 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const params = new URLSearchParams(window.location.search);
-    const tableNumber = params.get("table") || "Mang về";
-    document.getElementById("table-title").innerText = `Bàn: ${tableNumber}`;
+    const CATEGORIES = ["Đồ uống", "Đồ ăn", "Mì cay"];
 
     const MENU = [
-      { id: 1, name: "Cà phê đen đá", price: 20000 },
-      { id: 2, name: "Cà phê sữa đá", price: 25000 },
-      { id: 3, name: "Trà đào cam sả", price: 30000 },
-      { id: 4, name: "Trà chanh", price: 18000 }
+      // --- ĐỒ UỐNG ---
+      { id: 1, category: "Đồ uống", name: "Cà phê đen đá", price: 20000 },
+      { id: 2, category: "Đồ uống", name: "Cà phê sữa đá", price: 25000 },
+      { id: 3, category: "Đồ uống", name: "Bạc xỉu", price: 28000 },
+      { id: 4, category: "Đồ uống", name: "Cà phê muối", price: 32000 },
+      { id: 5, category: "Đồ uống", name: "Trà đào cam sả", price: 30000 },
+      { id: 6, category: "Đồ uống", name: "Trà chanh", price: 18000 },
+      { id: 7, category: "Đồ uống", name: "Trà vải nhiệt đới", price: 30000 },
+      { id: 8, category: "Đồ uống", name: "Matcha đá xay", price: 38000 },
+
+      // --- ĐỒ ĂN ---
+      { id: 9, category: "Đồ ăn", name: "Khoai tây chiên", price: 30000 },
+      { id: 10, category: "Đồ ăn", name: "Xúc xích đức nướng", price: 25000 },
+      { id: 11, category: "Đồ ăn", name: "Gà viên chiên giòn", price: 35000 },
+      { id: 12, category: "Đồ ăn", name: "Bánh mì bơ tỏi", price: 28000 },
+
+      // --- MÌ CAY ---
+      { id: 13, category: "Mì cay", name: "Mì cay bò mỹ", price: 45000 },
+      { id: 14, category: "Mì cay", name: "Mì cay hải sản", price: 48000 },
+      { id: 15, category: "Mì cay", name: "Mì cay xúc xích phô mai", price: 42000 },
+      { id: 16, category: "Mì cay", name: "Mì cay thập cẩm đặc biệt", price: 55000 }
     ];
 
     const cart = {};
+    const itemNotes = {};
+    let activeCategory = "all";
+
+    // Bắt buộc người dùng tự tay bấm chọn ("dine_in" hoặc "takeaway"), không chọn sẵn
+    let selectedMode = "";
+
+    const orderBoxEl = document.getElementById("order-box");
+    const tableSelectEl = document.getElementById("table-select");
+    const tableBigBoxEl = document.getElementById("table-big-box");
+    const btnDineInEl = document.getElementById("btn-dine-in");
+    const btnTakeawayEl = document.getElementById("btn-takeaway");
+
+    window.selectOrderMode = function(mode) {
+      selectedMode = mode;
+      orderBoxEl.classList.remove("alert-border");
+      btnDineInEl.classList.toggle("active", mode === "dine_in");
+      btnTakeawayEl.classList.toggle("active", mode === "takeaway");
+      tableBigBoxEl.classList.toggle("visible", mode === "dine_in");
+      syncTableTitle();
+
+      if (mode === "dine_in") {
+        tableSelectEl.focus();
+      }
+    };
+
+    window.onSelectTable = function() {
+      orderBoxEl.classList.remove("alert-border");
+      syncTableTitle();
+    };
+
+    window.syncTableTitle = function() {
+      const titleEl = document.getElementById("table-title");
+      if (!selectedMode) {
+        titleEl.innerText = "XIN CHÀO BẠN DIỆP";
+        return;
+      }
+      if (selectedMode === "takeaway") {
+        titleEl.innerText = "Đặt đơn: MANG VỀ";
+        return;
+      }
+      const val = tableSelectEl.value.trim();
+      titleEl.innerText = val ? `Tại quán · BÀN ${val}` : "Tại quán · Chưa chọn số bàn";
+    };
+
+    window.setCategory = function(cat) {
+      activeCategory = cat;
+      document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.cat === cat);
+      });
+      renderMenu();
+    };
 
     window.changeQty = function(id, delta) {
       const next = (cart[id] || 0) + delta;
@@ -67,24 +503,68 @@
       renderMenu();
     };
 
-    function renderMenu() {
-      const box = document.getElementById("menu-list");
-      box.innerHTML = MENU.map(item => {
-        const qty = cart[item.id] || 0;
-        return `
-          <div class="card">
+    window.updateItemNote = function(id, value) {
+      const trimmed = value.trim();
+      if (trimmed) itemNotes[id] = value;
+      else delete itemNotes[id];
+    };
+
+    function escapeHtml(str = "") {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function renderItemCard(item) {
+      const qty = cart[item.id] || 0;
+      const noteVal = itemNotes[item.id] || "";
+      const placeholderNote = item.category === "Mì cay"
+        ? "VD: cấp độ 2, không hành, thêm nấm..."
+        : item.category === "Đồ uống"
+          ? "VD: ít đá, ít ngọt, mang ra trước..."
+          : "VD: nhiều tương ớt, giòn kỹ...";
+
+      return `
+        <div class="card">
+          <div class="card-top">
             <div>
-              <div style="font-weight:bold; font-size:16px;">${item.name}</div>
-              <div style="color:#52525b; margin-top:3px;">${item.price.toLocaleString("vi-VN")}đ</div>
+              <div class="item-name">${escapeHtml(item.name)}</div>
+              <div class="item-price">${item.price.toLocaleString("vi-VN")}đ</div>
             </div>
-            <div>
-              <button class="btn" onclick="changeQty(${item.id}, -1)">-</button>
-              <span style="margin: 0 10px; font-weight:bold;">${qty}</span>
-              <button class="btn" onclick="changeQty(${item.id}, 1)">+</button>
+            <div class="qty-controls">
+              <button class="btn-qty" onclick="changeQty(${item.id}, -1)">-</button>
+              <span class="qty-val">${qty}</span>
+              <button class="btn-qty" onclick="changeQty(${item.id}, 1)">+</button>
             </div>
           </div>
-        `;
+          <div class="item-note-row">
+            <span class="item-note-label">Ghi chú món:</span>
+            <input
+              type="text"
+              class="item-note-input"
+              value="${escapeHtml(noteVal)}"
+              placeholder="${escapeHtml(placeholderNote)}"
+              oninput="updateItemNote(${item.id}, this.value)"
+            />
+          </div>
+        </div>
+      `;
+    }
+
+    function renderMenu() {
+      const box = document.getElementById("menu-list");
+      const catsToShow = activeCategory === "all" ? CATEGORIES : [activeCategory];
+
+      box.innerHTML = catsToShow.map(cat => {
+        const itemsInCat = MENU.filter(m => m.category === cat);
+        const headingHtml = activeCategory === "all"
+          ? `<div class="category-heading">${escapeHtml(cat)}</div>`
+          : "";
+        return headingHtml + itemsInCat.map(renderItemCard).join("");
       }).join("");
+
       updateCartBar();
     }
 
@@ -101,9 +581,32 @@
     }
 
     window.submitOrder = async function() {
+      if (!selectedMode) {
+        orderBoxEl.classList.add("alert-border");
+        alert("Bạn phải tự tay bấm chọn 'UỐNG / ĂN TẠI QUÁN' hoặc 'MANG VỀ' trước khi gửi đơn!");
+        return;
+      }
+
+      const rawTable = tableSelectEl.value.trim();
+      if (selectedMode === "dine_in" && !rawTable) {
+        orderBoxEl.classList.add("alert-border");
+        alert("Bạn đã chọn Tại quán — vui lòng kích chọn số bàn (từ 1 đến 10) trước khi gửi đơn!");
+        tableSelectEl.focus();
+        return;
+      }
+
       const items = Object.entries(cart).map(([id, qty]) => {
-        const item = MENU.find(m => m.id === Number(id));
-        return { id: item.id, name: item.name, price: item.price, qty };
+        const numId = Number(id);
+        const item = MENU.find(m => m.id === numId);
+        const dishNote = (itemNotes[numId] || "").trim();
+        return {
+          id: item.id,
+          category: item.category,
+          name: item.name,
+          price: item.price,
+          qty,
+          note: dishNote
+        };
       });
 
       if (items.length === 0) {
@@ -111,26 +614,35 @@
         return;
       }
 
+      const tableLabel = selectedMode === "takeaway" ? "Mang về" : rawTable;
+      const modeText = selectedMode === "takeaway" ? "Mang về" : "Tại quán";
       const total = items.reduce((sum, i) => sum + i.price * i.qty, 0);
-      const note = document.getElementById("order-note").value.trim();
+      const orderNote = document.getElementById("order-note").value.trim();
       const btn = document.getElementById("send-btn");
       btn.disabled = true;
       btn.innerText = "Đang gửi...";
 
       try {
         await push(ref(db, "orders"), {
-          table: tableNumber,
+          table: tableLabel,
+          orderType: modeText,
           items,
           total,
-          note,
+          note: orderNote,
           status: "new",
           createdAt: Date.now()
         });
 
         for (const k of Object.keys(cart)) delete cart[k];
+        for (const k of Object.keys(itemNotes)) delete itemNotes[k];
         document.getElementById("order-note").value = "";
+        syncTableTitle();
         renderMenu();
-        alert(`Đã gửi đơn cho ${tableNumber}! Quầy đang tiếp nhận.`);
+        alert(
+          selectedMode === "takeaway"
+            ? "Đã gửi đơn MANG VỀ! Quầy đang tiếp nhận."
+            : `Đã gửi đơn TẠI QUÁN (Bàn ${rawTable})! Quầy đang tiếp nhận.`
+        );
       } catch (err) {
         alert("Lỗi gửi đơn: " + err.message);
       } finally {
@@ -139,6 +651,7 @@
       }
     };
 
+    syncTableTitle();
     renderMenu();
   </script>
 </body>
