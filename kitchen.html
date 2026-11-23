@@ -1,3 +1,5 @@
+https://mohinhbanhang.vercel.app/: link gọi món
+https://mohinhbanhang-dtst.vercel.app/kitchen.html: link tiếp nhận 
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -8,19 +10,22 @@
     body { font-family: Arial, sans-serif; margin: 0; padding: 16px; background: #0f172a; color: #f8fafc; }
     .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
     .sound-btn { padding: 10px 14px; border: none; border-radius: 8px; background: #38bdf8; color: #082f49; font-weight: bold; cursor: pointer; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; }
     .order-card { background: #1e293b; border-left: 5px solid #22c55e; border-radius: 10px; padding: 14px; }
     .order-card.making { border-left-color: #f59e0b; }
     .order-card.done { border-left-color: #64748b; opacity: 0.65; }
     .badge { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; background: #22c55e; color: #052e16; }
     .making .badge { background: #f59e0b; color: #451a03; }
     .done .badge { background: #64748b; color: #fff; }
+    .mode-tag { display: inline-block; margin-left: 6px; padding: 2px 7px; border-radius: 5px; font-size: 11px; font-weight: bold; background: #334155; color: #e2e8f0; vertical-align: middle; }
+    .item-note { color: #7dd3fc; font-size: 12px; margin-top: 2px; }
+    .order-note { color: #fde047; font-size: 13px; margin-bottom: 8px; padding: 6px 8px; background: rgba(253, 224, 71, 0.08); border-radius: 6px; }
     .actions button { margin-top: 10px; margin-right: 6px; padding: 7px 11px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
   </style>
 </head>
 <body>
   <div class="top">
-    <h2 style="margin:0;">QUẦY TIẾP NHẬN ĐƠN REALTIME</h2>
+    <h2 style="margin:0;">QUẦY TIẾP NHẬN ĐƠN </h2>
     <button class="sound-btn" onclick="enableSound()">Bật chuông báo đơn</button>
   </div>
   <div id="orders-grid" class="grid"></div>
@@ -45,6 +50,14 @@
     let soundEnabled = false;
     let isFirstLoad = true;
     const knownIds = new Set();
+
+    function escapeHtml(str = "") {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
 
     window.enableSound = function() {
       soundEnabled = true;
@@ -88,23 +101,37 @@
       const statusLabel = { new: "ĐƠN MỚI", making: "ĐANG PHA", done: "ĐÃ XONG" };
       const grid = document.getElementById("orders-grid");
 
-      grid.innerHTML = list.map(o => `
-        <div class="order-card ${o.status || 'new'}">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <strong style="font-size:18px;">Bàn: ${o.table}</strong>
-            <span class="badge">${statusLabel[o.status] || "ĐƠN MỚI"}</span>
+      grid.innerHTML = list.map(o => {
+        const tableText = escapeHtml(o.table || "Mang về");
+        const modeText = o.orderType ? `<span class="mode-tag">${escapeHtml(o.orderType)}</span>` : "";
+        const itemsHtml = (o.items || []).map(i => `
+          <li style="margin-bottom:6px;">
+            <div><strong>${escapeHtml(i.qty)}x</strong> ${escapeHtml(i.name)}</div>
+            ${i.note ? `<div class="item-note">↳ Ghi chú món: ${escapeHtml(i.note)}</div>` : ""}
+          </li>
+        `).join("");
+
+        return `
+          <div class="order-card ${escapeHtml(o.status || 'new')}">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+              <div>
+                <strong style="font-size:18px;">Bàn: ${tableText}</strong>
+                ${modeText}
+              </div>
+              <span class="badge">${statusLabel[o.status] || "ĐƠN MỚI"}</span>
+            </div>
+            <ul style="padding-left:18px; margin:10px 0;">
+              ${itemsHtml}
+            </ul>
+            ${o.note ? `<div class="order-note">Ghi chú đơn: ${escapeHtml(o.note)}</div>` : ""}
+            <div style="font-weight:bold;">Tổng: ${(o.total || 0).toLocaleString("vi-VN")}đ</div>
+            <div class="actions">
+              <button style="background:#f59e0b;color:#111;" onclick="setStatus('${o.id}', 'making')">Đang pha</button>
+              <button style="background:#22c55e;color:#111;" onclick="setStatus('${o.id}', 'done')">Hoàn tất</button>
+            </div>
           </div>
-          <ul style="padding-left:18px; margin:10px 0;">
-            ${(o.items || []).map(i => `<li><strong>${i.qty}x</strong> ${i.name}</li>`).join("")}
-          </ul>
-          ${o.note ? `<div style="color:#fde047; font-size:13px; margin-bottom:6px;">Ghi chú: ${o.note}</div>` : ""}
-          <div style="font-weight:bold;">Tổng: ${(o.total || 0).toLocaleString("vi-VN")}đ</div>
-          <div class="actions">
-            <button style="background:#f59e0b;color:#111;" onclick="setStatus('${o.id}', 'making')">Đang pha</button>
-            <button style="background:#22c55e;color:#111;" onclick="setStatus('${o.id}', 'done')">Hoàn tất</button>
-          </div>
-        </div>
-      `).join("");
+        `;
+      }).join("");
     });
   </script>
 </body>
