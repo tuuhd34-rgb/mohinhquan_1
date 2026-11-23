@@ -6,14 +6,25 @@
   <title>Quầy Tiếp Nhận Đơn</title>
   <style>
     * { box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; margin: 0; padding: 16px; background: #0f172a; color: #f8fafc; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background: #0f172a;
+      color: #f8fafc;
+      font-family: Arial, sans-serif;
+    }
 
-    /* Màn hình đăng nhập khi truy cập link */
+    /* Màn hình đăng nhập luôn nổi rõ khi chưa đăng nhập */
     #login-screen {
-      min-height: calc(100vh - 32px);
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background: #0f172a;
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: 16px;
     }
     #login-screen.hidden { display: none; }
     .login-card {
@@ -62,7 +73,10 @@
       font-size: 13px;
     }
 
-    #app-shell { display: none; }
+    #app-shell {
+      display: none;
+      padding: 16px;
+    }
     #app-shell.unlocked { display: block; }
 
     .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
@@ -136,4 +150,11 @@
     .day-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; cursor: pointer; user-select: none; }
     .day-header:hover .day-title-text { color: #38bdf8; }
     .day-title { font-size: 15px; font-weight: bold; color: #e2e8f0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .day-meta { font-size: 13px; color:
+    .day-meta { font-size: 13px; color: #94a3b8; font-weight: normal; }
+    .day-controls { display: flex; gap: 8px; align-items: center; }
+    .btn-toggle { padding: 6px 11px; border: 1px solid #334155; border-radius: 6px; background: #1e293b; color: #e2e8f0; cursor: pointer; font-size: 13px; font-weight: bold; }
+    .btn-toggle:hover { background: #334155; }
+    .btn-delete-day { padding: 6px 11px; border: none; border-radius: 6px; background: #dc2626; color: #fff; cursor: pointer; font-size: 13px; font-weight: bold; }
+    .btn-delete-day:hover { background: #b91c1c; }
+
+    .day-orders { margin-top:
