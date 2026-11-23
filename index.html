@@ -69,7 +69,6 @@
       color: #fff;
     }
 
-    /* Hộp chọn số bàn chỉ hiện khi cần gọi nhân viên hỗ trợ */
     .support-panel {
       display: none;
       background: #fffbeb;
@@ -206,6 +205,7 @@
       flex-shrink: 0;
       border: 1px solid #e5e7eb;
       background: #f3f4f6;
+      display: block;
     }
 
     .item-name {
@@ -325,138 +325,4 @@
 
     .order-step-title {
       font-size: 13px;
-      font-weight: 800;
-      color: #111827;
-      margin-bottom: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .order-step-title span.req {
-      color: #dc2626;
-      font-size: 12px;
-    }
-
-    .mode-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    .mode-choice-btn {
-      padding: 11px 12px;
-      border-radius: 10px;
-      border: 2px solid #cbd5e1;
-      background: #ffffff;
-      color: #111827;
-      font-size: 15px;
-      font-weight: 800;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    .mode-choice-btn.active {
-      background: #111827;
-      color: #ffffff;
-      border-color: #111827;
-      box-shadow: 0 3px 10px rgba(17, 24, 39, 0.2);
-    }
-
-    .table-big-box {
-      display: none;
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px dashed #cbd5e1;
-    }
-
-    .table-big-box.visible {
-      display: block;
-    }
-
-    .table-big-label {
-      display: block;
-      font-size: 14px;
-      font-weight: 800;
-      color: #111827;
-      margin-bottom: 6px;
-    }
-
-    .table-big-label span {
-      color: #dc2626;
-    }
-
-    .table-select-big {
-      width: 100%;
-      padding: 13px 14px;
-      border-radius: 10px;
-      border: 2px solid #111827;
-      font-size: 18px;
-      font-weight: 800;
-      color: #111827;
-      background-color: #ffffff;
-      cursor: pointer;
-    }
-
-    .cart-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #111827;
-      color: #fff;
-      padding: 12px 14px;
-      border-radius: 12px;
-      gap: 10px;
-    }
-
-    .cart-summary {
-      font-size: 15px;
-      font-weight: 700;
-    }
-
-    .send-btn {
-      background: var(--accent);
-      color: var(--accent-text);
-      font-weight: 800;
-      font-size: 15px;
-      padding: 11px 18px;
-      border: none;
-      border-radius: 9px;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
-    .send-btn:disabled,
-    .support-send-btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <div>
-      <div class="header-sub">Menu gọi món tại quầy</div>
-      <h2 id="table-title" class="header-title">kinh chao quy khach</h2>
-    </div>
-    <button type="button" class="support-btn" onclick="toggleSupportPanel()">🙋 Gọi nhân viên hỗ trợ</button>
-  </div>
-
-  <!-- Chỉ mở ra khi khách nhấn Gọi nhân viên hỗ trợ -->
-  <div id="support-panel" class="support-panel">
-    <div class="support-panel-title">Chọn số bàn cần nhân viên hỗ trợ:</div>
-    <div class="support-controls">
-      <select id="support-table-select" class="support-table-select">
-        <option value="">-- Chọn số bàn (1 - 10) --</option>
-        <option value="1">Bàn 1</option>
-        <option value="2">Bàn 2</option>
-        <option value="3">Bàn 3</option>
-        <option value="4">Bàn 4</option>
-        <option value="5">Bàn 5</option>
-        <option value="6">Bàn 6</option>
-        <option value="7">Bàn 7</option>
-        <option value="8">Bàn 8</option>
-        <option value="9">Bàn 9</option>
-        <option value="10">Bàn 10</option>
-      </select>
-      <button id="support-send-btn" type="button" class="support-send-btn" onclick="sendSupportCall()">Gửi gọi hỗ trợ</button>
+      font
