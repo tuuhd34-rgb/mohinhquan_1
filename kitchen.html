@@ -5,80 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Quầy Tiếp Nhận Đơn</title>
   <style>
-    * { box-sizing: border-box; }
-    html, body {
-      margin: 0;
-      padding: 0;
-      min-height: 100%;
-      background: #0f172a;
-      color: #f8fafc;
-      font-family: Arial, sans-serif;
-    }
-
-    /* Màn hình đăng nhập luôn nổi rõ khi chưa đăng nhập */
-    #login-screen {
-      position: fixed;
-      inset: 0;
-      z-index: 50;
-      background: #0f172a;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-    #login-screen.hidden { display: none; }
-    .login-card {
-      width: 100%;
-      max-width: 380px;
-      background: #1e293b;
-      border: 1px solid #334155;
-      border-radius: 14px;
-      padding: 22px;
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
-    }
-    .login-title { margin: 0 0 6px 0; font-size: 20px; color: #f8fafc; }
-    .login-sub { margin: 0 0 18px 0; font-size: 13px; color: #94a3b8; }
-    .login-field { margin-bottom: 14px; }
-    .login-label { display: block; font-size: 13px; font-weight: bold; color: #cbd5e1; margin-bottom: 6px; }
-    .login-input {
-      width: 100%;
-      padding: 11px 12px;
-      border-radius: 8px;
-      border: 1px solid #475569;
-      background: #0f172a;
-      color: #f8fafc;
-      font-size: 16px;
-    }
-    .login-input:focus { outline: none; border-color: #38bdf8; }
-    .login-btn {
-      width: 100%;
-      padding: 12px 14px;
-      border: none;
-      border-radius: 8px;
-      background: #22c55e;
-      color: #052e16;
-      font-weight: bold;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    .login-btn:hover { background: #16a34a; }
-    .login-error {
-      display: none;
-      margin-top: 10px;
-      padding: 8px 10px;
-      border-radius: 8px;
-      background: #7f1d1d;
-      border: 1px solid #ef4444;
-      color: #fecaca;
-      font-size: 13px;
-    }
-
-    #app-shell {
-      display: none;
-      padding: 16px;
-    }
-    #app-shell.unlocked { display: block; }
-
+    body { font-family: Arial, sans-serif; margin: 0; padding: 16px; background: #0f172a; color: #f8fafc; }
     .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
     .top-actions { display: flex; gap: 8px; flex-wrap: wrap; }
     .sound-btn { padding: 10px 14px; border: none; border-radius: 8px; background: #38bdf8; color: #082f49; font-weight: bold; cursor: pointer; }
@@ -157,4 +84,735 @@
     .btn-delete-day { padding: 6px 11px; border: none; border-radius: 6px; background: #dc2626; color: #fff; cursor: pointer; font-size: 13px; font-weight: bold; }
     .btn-delete-day:hover { background: #b91c1c; }
 
-    .day-orders { margin-top:
+    .day-orders { margin-top: 12px; display: none; }
+    .day-orders.is-open { display: grid; }
+  </style>
+</head>
+<body>
+  <div id="error-box"></div>
+
+  <div id="support-alerts-box">
+    <div class="support-title">🚨 YÊU CẦU HỖ TRỢ TỪ BÀN</div>
+    <div id="support-alerts-list" class="support-list"></div>
+  </div>
+
+  <div class="top">
+    <div>
+      <h2 style="margin:0;">QUẦY TIẾP NHẬN ĐƠN</h2>
+      <div id="today-label" style="font-size:13px; color:#94a3b8; margin-top:4px;"></div>
+    </div>
+    <div class="top-actions">
+      <button type="button" id="btn-mute-alert" class="mute-btn">🔇 Đang kêu... (Bấm dừng)</button>
+      <button type="button" id="btn-revenue" class="revenue-btn">💰 Doanh thu</button>
+      <button type="button" id="btn-sound" class="sound-btn">🔔 Bật chuông báo đơn</button>
+    </div>
+  </div>
+
+  <div id="revenue-section">
+    <div class="revenue-header">
+      <div style="font-size:16px; font-weight:bold; color:#fde047;">💰 BÁO CÁO DOANH THU</div>
+      <button type="button" id="btn-lock-revenue" class="lock-btn">🔒 Khóa lại</button>
+    </div>
+    <div class="revenue-grid">
+      <div class="revenue-card">
+        <div id="rev-today-label" class="revenue-label">Doanh thu hôm nay</div>
+        <div id="rev-today-amount" class="revenue-amount">0đ</div>
+        <div id="rev-today-count" class="revenue-sub">0 đơn</div>
+      </div>
+      <div class="revenue-card month">
+        <div id="rev-month-label" class="revenue-label">Doanh thu tháng</div>
+        <div id="rev-month-amount" class="revenue-amount">0đ</div>
+        <div id="rev-month-count" class="revenue-sub">0 đơn</div>
+        <select id="month-selector" class="month-select" aria-label="Chọn tháng xem doanh thu"></select>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">
+    <div class="section-left">
+      <span>🟢 ĐƠN MỚI (HÔM NAY)</span>
+      <span id="new-count" class="count-pill active">0</span>
+    </div>
+  </div>
+  <div id="new-orders-grid" class="grid"></div>
+
+  <div class="section-title" style="margin-top: 28px;">
+    <div class="section-left">
+      <span>⚪ ĐÃ XONG (HÔM NAY)</span>
+      <span id="done-count" class="count-pill">0</span>
+    </div>
+  </div>
+  <div id="done-orders-grid" class="grid"></div>
+
+  <div class="section-title" style="margin-top: 34px;">
+    <div class="section-left">
+      <span>📁 THƯ MỤC ĐƠN THEO NGÀY</span>
+      <span id="archive-days-count" class="count-pill">0 ngày</span>
+    </div>
+    <button type="button" id="btn-add-folder" class="btn-add-folder">➕ Tạo thư mục ngày</button>
+  </div>
+  <div id="archive-days-container"></div>
+
+  <script>
+    (function () {
+      const REVENUE_PIN = "9999";
+      const NEW_ORDER_PHRASE = "Có đơn mới, có đơn mới";
+      const errorBox = document.getElementById("error-box");
+
+      function showError(msg) {
+        if (!errorBox) return;
+        errorBox.style.display = "block";
+        errorBox.textContent = msg;
+      }
+
+      window.addEventListener("error", (e) => {
+        showError("Lỗi trang: " + (e.message || e.error || "Không xác định"));
+      });
+
+      window.addEventListener("unhandledrejection", (e) => {
+        const reason = e.reason && e.reason.message ? e.reason.message : String(e.reason || "Lỗi tải dữ liệu");
+        showError("Lỗi kết nối: " + reason);
+      });
+
+      let soundEnabled = false;
+      let alertLoopTimer = null;
+      let revenueUnlocked = false;
+      let selectedMonthKey = null;
+      let latestOrdersData = {};
+      let latestCallsData = {};
+      const expandedDays = new Set();
+      const customFolders = new Set();
+
+      const STORAGE_ACK_KEY = "kitchen_acked_orders_v1";
+      const acknowledgedOrderIds = new Set(
+        JSON.parse(localStorage.getItem(STORAGE_ACK_KEY) || "[]")
+      );
+
+      function saveAckIds() {
+        try {
+          localStorage.setItem(STORAGE_ACK_KEY, JSON.stringify(Array.from(acknowledgedOrderIds)));
+        } catch (_) {}
+      }
+
+      function getDateKeyByOffset(offsetDays = 0) {
+        const d = new Date();
+        d.setDate(d.getDate() + offsetDays);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+      }
+
+      function getDateKey(ts) {
+        const d = ts ? new Date(ts) : new Date();
+        if (Number.isNaN(d.getTime())) return getDateKeyByOffset(0);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+      }
+
+      function getMonthKey(ts) {
+        const d = ts ? new Date(ts) : new Date();
+        if (Number.isNaN(d.getTime())) return getMonthKey(Date.now());
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        return `${y}-${m}`;
+      }
+
+      function formatDateVN(dateKey) {
+        const parts = String(dateKey || "").split("-");
+        if (parts.length !== 3) return dateKey;
+        const [y, m, d] = parts;
+        return `${d}/${m}/${y}`;
+      }
+
+      function formatMonthVN(monthKey) {
+        const parts = String(monthKey || "").split("-");
+        if (parts.length !== 2) return monthKey;
+        const [y, m] = parts;
+        return `Tháng ${m}/${y}`;
+      }
+
+      function escapeHtml(str = "") {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function playChime() {
+        try {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          const ctx = new AudioCtx();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(920, ctx.currentTime);
+          gain.gain.setValueAtTime(0.18, ctx.currentTime);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.22);
+        } catch (_) {}
+      }
+
+      function speakPhrase(phrase) {
+        if (!soundEnabled) return;
+        playChime();
+        try {
+          if ("speechSynthesis" in window) {
+            window.speechSynthesis.cancel();
+            const utter = new SpeechSynthesisUtterance(phrase);
+            utter.lang = "vi-VN";
+            utter.rate = 1.05;
+            utter.pitch = 1.05;
+            const voices = window.speechSynthesis.getVoices();
+            const viVoice = voices.find(v => /vi/i.test(v.lang));
+            if (viVoice) utter.voice = viVoice;
+            window.speechSynthesis.speak(utter);
+          }
+        } catch (_) {}
+      }
+
+      function getUnacknowledgedNewOrders(data) {
+        return Object.entries(data || {})
+          .map(([id, val]) => ({ id, ...(val || {}) }))
+          .filter(o => o.status !== "done" && !acknowledgedOrderIds.has(o.id));
+      }
+
+      function getPendingStaffCalls(callsData) {
+        return Object.entries(callsData || {})
+          .map(([id, val]) => ({ id, ...(val || {}) }))
+          .filter(c => c.status !== "resolved")
+          .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      }
+
+      function getNextAlertPhrase() {
+        const pendingCalls = getPendingStaffCalls(latestCallsData);
+        if (pendingCalls.length > 0) {
+          const tbl = pendingCalls[0].table || "";
+          return tbl ? `Bàn ${tbl} cần hỗ trợ` : "Có bàn cần hỗ trợ";
+        }
+        const unacked = getUnacknowledgedNewOrders(latestOrdersData);
+        if (unacked.length > 0) {
+          return NEW_ORDER_PHRASE;
+        }
+        return null;
+      }
+
+      function syncAlertLoop() {
+        const unacked = getUnacknowledgedNewOrders(latestOrdersData);
+        const pendingCalls = getPendingStaffCalls(latestCallsData);
+        const totalAlerts = unacked.length + pendingCalls.length;
+        const muteBtn = document.getElementById("btn-mute-alert");
+
+        if (totalAlerts > 0 && soundEnabled) {
+          muteBtn.classList.add("ringing");
+          muteBtn.textContent = `🔇 Đang kêu (${totalAlerts} thông báo) — Bấm dừng`;
+          if (!alertLoopTimer) {
+            const firstPhrase = getNextAlertPhrase();
+            if (firstPhrase) speakPhrase(firstPhrase);
+
+            alertLoopTimer = setInterval(() => {
+              const phrase = getNextAlertPhrase();
+              if (!phrase || !soundEnabled) {
+                stopAlertLoop();
+                return;
+              }
+              speakPhrase(phrase);
+            }, 4200);
+          }
+        } else {
+          stopAlertLoop();
+        }
+      }
+
+      function stopAlertLoop() {
+        if (alertLoopTimer) {
+          clearInterval(alertLoopTimer);
+          alertLoopTimer = null;
+        }
+        try {
+          if ("speechSynthesis" in window) {
+            window.speechSynthesis.cancel();
+          }
+        } catch (_) {}
+        const muteBtn = document.getElementById("btn-mute-alert");
+        if (muteBtn) muteBtn.classList.remove("ringing");
+      }
+
+      function renderStaffCalls(callsData) {
+        const pendingCalls = getPendingStaffCalls(callsData);
+        const box = document.getElementById("support-alerts-box");
+        const listEl = document.getElementById("support-alerts-list");
+
+        if (!pendingCalls.length) {
+          box.classList.remove("has-calls");
+          listEl.innerHTML = "";
+          return;
+        }
+
+        box.classList.add("has-calls");
+        listEl.innerHTML = pendingCalls.map(c => {
+          const tbl = escapeHtml(c.table || "");
+          const label = tbl ? `Bàn ${tbl} cần hỗ trợ` : escapeHtml(c.message || "Cần hỗ trợ");
+          const timeText = c.createdAt
+            ? new Date(c.createdAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
+            : "";
+
+          return `
+            <div class="support-item">
+              <div>
+                <div class="support-text">🔔 ${label}</div>
+                ${timeText ? `<div class="support-time">Lúc ${timeText}</div>` : ""}
+              </div>
+              <button type="button" class="btn-resolve-call" data-action="resolve-call" data-id="${escapeHtml(c.id)}">
+                ✔ Đã hỗ trợ
+              </button>
+            </div>
+          `;
+        }).join("");
+      }
+
+      function renderRevenue(list) {
+        const now = Date.now();
+        const todayKey = getDateKey(now);
+        const currentMonthKey = getMonthKey(now);
+
+        const monthSet = new Set([currentMonthKey]);
+        for (const o of list) {
+          monthSet.add(getMonthKey((o.createdAt || o.completedAt) || now));
+        }
+        const sortedMonths = Array.from(monthSet).sort((a, b) => b.localeCompare(a));
+
+        if (!selectedMonthKey || !monthSet.has(selectedMonthKey)) {
+          selectedMonthKey = currentMonthKey;
+        }
+
+        const selectEl = document.getElementById("month-selector");
+        selectEl.innerHTML = sortedMonths
+          .map(mk => `<option value="${escapeHtml(mk)}" ${mk === selectedMonthKey ? "selected" : ""}>${escapeHtml(formatMonthVN(mk))}</option>`)
+          .join("");
+
+        const todayOrders = list.filter(o => getDateKey((o.createdAt || o.completedAt) || now) === todayKey);
+        const monthOrders = list.filter(o => getMonthKey((o.createdAt || o.completedAt) || now) === selectedMonthKey);
+
+        const todayTotal = todayOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+        const monthTotal = monthOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+
+        document.getElementById("rev-today-label").textContent = `Doanh thu hôm nay (${formatDateVN(todayKey)})`;
+        document.getElementById("rev-today-amount").textContent = `${todayTotal.toLocaleString("vi-VN")}đ`;
+        document.getElementById("rev-today-count").textContent = `${todayOrders.length} đơn`;
+
+        document.getElementById("rev-month-label").textContent = `Doanh thu ${formatMonthVN(selectedMonthKey)}`;
+        document.getElementById("rev-month-amount").textContent = `${monthTotal.toLocaleString("vi-VN")}đ`;
+        document.getElementById("rev-month-count").textContent = `${monthOrders.length} đơn`;
+      }
+
+      function renderOrderCard(o) {
+        const isDone = o.status === "done";
+        const isUnackedNew = !isDone && !acknowledgedOrderIds.has(o.id);
+        const tableText = escapeHtml(o.table || "Mang về");
+        const modeText = o.orderType ? `<span class="mode-tag">${escapeHtml(o.orderType)}</span>` : "";
+        const timeText = o.createdAt
+          ? new Date(o.createdAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
+          : "";
+
+        const itemsHtml = (o.items || []).map(i => `
+          <li style="margin-bottom:6px;">
+            <div><strong>${escapeHtml(i.qty)}x</strong> ${escapeHtml(i.name)}</div>
+            ${i.note ? `<div class="item-note">↳ Ghi chú món: ${escapeHtml(i.note)}</div>` : ""}
+          </li>
+        `).join("");
+
+        return `
+          <div class="order-card ${isDone ? "done" : "new"} ${isUnackedNew ? "unacked" : ""}">
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;">
+                <div>
+                  <strong style="font-size:18px;">Bàn: ${tableText}</strong>
+                  ${modeText}
+                </div>
+                <div>
+                  <span class="badge">${isDone ? "ĐÃ XONG" : "ĐƠN MỚI"}</span>
+                  ${isUnackedNew ? `<span class="badge unacked-badge">CHƯA XÁC NHẬN</span>` : ""}
+                </div>
+              </div>
+              ${timeText ? `<div style="font-size:12px; color:#94a3b8; margin-top:4px;">Lúc ${timeText}</div>` : ""}
+              <ul style="padding-left:18px; margin:10px 0;">
+                ${itemsHtml}
+              </ul>
+              ${o.note ? `<div class="order-note">Ghi chú đơn: ${escapeHtml(o.note)}</div>` : ""}
+            </div>
+
+            <div>
+              <div style="font-weight:bold;">Tổng: ${(Number(o.total) || 0).toLocaleString("vi-VN")}đ</div>
+              <div class="actions">
+                ${isDone
+                  ? `<button type="button" class="btn-undo" data-action="status" data-id="${escapeHtml(o.id)}" data-status="new">↩ Khôi phục lại đơn mới</button>`
+                  : `
+                    ${isUnackedNew
+                      ? `<button type="button" class="btn-ack" data-action="ack" data-id="${escapeHtml(o.id)}">🔔 Xác nhận đơn mới</button>`
+                      : ""
+                    }
+                    <button type="button" class="btn-done" data-action="status" data-id="${escapeHtml(o.id)}" data-status="done">✔ Hoàn tất</button>
+                  `
+                }
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderAll(data) {
+        const todayKey = getDateKeyByOffset(0);
+        document.getElementById("today-label").textContent =
+          `Hôm nay: ${formatDateVN(todayKey)} — Tự động chuyển sang thư mục ngày sau 00:00`;
+
+        const list = Object.entries(data || {}).map(([id, val]) => ({ id, ...(val || {}) }));
+        list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+        renderRevenue(list);
+
+        const todayOrders = list.filter(o => getDateKey(o.createdAt || o.completedAt || Date.now()) === todayKey);
+        const newOrders = todayOrders.filter(o => o.status !== "done");
+        const doneOrders = todayOrders.filter(o => o.status === "done");
+
+        document.getElementById("new-count").textContent = newOrders.length;
+        document.getElementById("done-count").textContent = doneOrders.length;
+
+        document.getElementById("new-orders-grid").innerHTML = newOrders.length
+          ? newOrders.map(renderOrderCard).join("")
+          : `<div class="empty-msg">Hiện không có đơn mới nào hôm nay.</div>`;
+
+        document.getElementById("done-orders-grid").innerHTML = doneOrders.length
+          ? doneOrders.map(renderOrderCard).join("")
+          : `<div class="empty-msg">Chưa có đơn nào hoàn tất hôm nay.</div>`;
+
+        const archiveOrders = list.filter(o => getDateKey(o.createdAt || o.completedAt || Date.now()) !== todayKey);
+        const groupedByDay = new Map();
+
+        for (const order of archiveOrders) {
+          const dKey = getDateKey(order.createdAt || order.completedAt || Date.now());
+          if (!groupedByDay.has(dKey)) groupedByDay.set(dKey, []);
+          groupedByDay.get(dKey).push(order);
+        }
+
+        for (const customKey of customFolders) {
+          if (customKey !== todayKey && !groupedByDay.has(customKey)) {
+            groupedByDay.set(customKey, []);
+          }
+        }
+
+        const sortedDays = Array.from(groupedByDay.keys()).sort((a, b) => b.localeCompare(a));
+        document.getElementById("archive-days-count").textContent = `${sortedDays.length} ngày`;
+
+        const archiveContainer = document.getElementById("archive-days-container");
+        archiveContainer.innerHTML = sortedDays.map(dateKey => {
+          const dayList = groupedByDay.get(dateKey) || [];
+          const dayTotal = dayList.reduce((sum, item) => sum + (Number(item.total) || 0), 0);
+          const isOpen = expandedDays.has(dateKey);
+
+          return `
+            <div class="day-folder" data-date="${escapeHtml(dateKey)}">
+              <div class="day-header" data-action="toggle-day" data-date="${escapeHtml(dateKey)}">
+                <div class="day-title">
+                  <span class="day-title-text">📅 Ngày ${formatDateVN(dateKey)}</span>
+                  <span class="day-meta">(${dayList.length} đơn • Tổng: ${dayTotal.toLocaleString("vi-VN")}đ)</span>
+                </div>
+                <div class="day-controls">
+                  <button type="button" class="btn-toggle" data-action="toggle-day" data-date="${escapeHtml(dateKey)}">
+                    ${isOpen ? "▲ Thu gọn" : "▼ Xem đơn"}
+                  </button>
+                  <button type="button" class="btn-delete-day" data-action="delete-day" data-date="${escapeHtml(dateKey)}">
+                    🗑 Xóa ngày này
+                  </button>
+                </div>
+              </div>
+              <div class="grid day-orders ${isOpen ? "is-open" : ""}">
+                ${dayList.length
+                  ? dayList.map(renderOrderCard).join("")
+                  : `<div class="empty-msg">Chưa có đơn nào trong thư mục ngày ${formatDateVN(dateKey)}.</div>`
+                }
+              </div>
+            </div>
+          `;
+        }).join("");
+
+        syncAlertLoop();
+      }
+
+      customFolders.add(getDateKeyByOffset(-1));
+      customFolders.add(getDateKeyByOffset(-2));
+      renderAll(latestOrdersData);
+      renderStaffCalls(latestCallsData);
+
+      document.getElementById("month-selector").addEventListener("change", (e) => {
+        selectedMonthKey = e.target.value;
+        renderAll(latestOrdersData);
+      });
+
+      document.getElementById("btn-revenue").addEventListener("click", () => {
+        const revBox = document.getElementById("revenue-section");
+        if (revenueUnlocked) {
+          revBox.classList.toggle("unlocked");
+          return;
+        }
+        const pin = prompt("Nhập mật khẩu để xem mục Doanh thu:");
+        if (pin === null) return;
+        if (pin.trim() === REVENUE_PIN) {
+          revenueUnlocked = true;
+          revBox.classList.add("unlocked");
+          renderAll(latestOrdersData);
+        } else {
+          alert("Mật khẩu không đúng!");
+        }
+      });
+
+      document.getElementById("btn-lock-revenue").addEventListener("click", () => {
+        revenueUnlocked = false;
+        document.getElementById("revenue-section").classList.remove("unlocked");
+      });
+
+      document.getElementById("btn-sound").addEventListener("click", () => {
+        soundEnabled = true;
+        const phrase = getNextAlertPhrase() || NEW_ORDER_PHRASE;
+        speakPhrase(phrase);
+        syncAlertLoop();
+        alert("Đã bật chuông báo! Hệ thống sẽ đọc báo liên tục khi có đơn mới hoặc bàn gọi hỗ trợ cho đến khi bấm xác nhận.");
+      });
+
+      document.getElementById("btn-mute-alert").addEventListener("click", () => {
+        stopAlertLoop();
+        document.getElementById("btn-mute-alert").classList.remove("ringing");
+      });
+
+      document.getElementById("btn-add-folder").addEventListener("click", () => {
+        const input = prompt("Nhập ngày muốn tạo thư mục (DD/MM/YYYY, ví dụ: 21/11/2026):");
+        if (!input) return;
+        const match = input.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (!match) {
+          alert("Vui lòng nhập đúng định dạng DD/MM/YYYY (ví dụ: 21/11/2026).");
+          return;
+        }
+        const day = String(match[1]).padStart(2, "0");
+        const month = String(match[2]).padStart(2, "0");
+        const year = match[3];
+        const dateKey = `${year}-${month}-${day}`;
+        customFolders.add(dateKey);
+        expandedDays.add(dateKey);
+        renderAll(latestOrdersData);
+      });
+
+      document.addEventListener("click", async (e) => {
+        const target = e.target.closest("[data-action]");
+        if (!target) return;
+
+        const action = target.getAttribute("data-action");
+
+        if (action === "resolve-call") {
+          const callId = target.getAttribute("data-id");
+          if (!callId) return;
+          if (typeof window.__firebaseResolveCall === "function") {
+            await window.__firebaseResolveCall(callId);
+          }
+          return;
+        }
+
+        if (action === "ack") {
+          const orderId = target.getAttribute("data-id");
+          if (!orderId) return;
+          acknowledgedOrderIds.add(orderId);
+          saveAckIds();
+          renderAll(latestOrdersData);
+          return;
+        }
+
+        if (action === "toggle-day") {
+          const dateKey = target.getAttribute("data-date");
+          if (!dateKey) return;
+          if (expandedDays.has(dateKey)) {
+            expandedDays.delete(dateKey);
+          } else {
+            expandedDays.add(dateKey);
+          }
+          renderAll(latestOrdersData);
+          return;
+        }
+
+        if (action === "delete-day") {
+          e.stopPropagation();
+          const dateKey = target.getAttribute("data-date");
+          if (!dateKey) return;
+
+          const label = formatDateVN(dateKey);
+          const targetIds = Object.entries(latestOrdersData)
+            .filter(([, val]) => getDateKey((val && (val.createdAt || val.completedAt)) || Date.now()) === dateKey)
+            .map(([id]) => id);
+
+          if (!targetIds.length) {
+            customFolders.delete(dateKey);
+            expandedDays.delete(dateKey);
+            renderAll(latestOrdersData);
+            return;
+          }
+
+          const ok = confirm(`Xóa toàn bộ ${targetIds.length} đơn của ngày ${label}?`);
+          if (!ok) return;
+
+          if (typeof window.__firebaseDeleteOrders === "function") {
+            await window.__firebaseDeleteOrders(targetIds);
+          }
+          for (const id of targetIds) acknowledgedOrderIds.delete(id);
+          saveAckIds();
+          customFolders.delete(dateKey);
+          expandedDays.delete(dateKey);
+          renderAll(latestOrdersData);
+          return;
+        }
+
+        if (action === "status") {
+          const orderId = target.getAttribute("data-id");
+          const status = target.getAttribute("data-status");
+          if (!orderId || !status) return;
+          if (status === "done") {
+            acknowledgedOrderIds.add(orderId);
+            saveAckIds();
+          } else if (status === "new") {
+            acknowledgedOrderIds.delete(orderId);
+            saveAckIds();
+          }
+          const payload = { status };
+          if (status === "done") payload.completedAt = Date.now();
+          if (typeof window.__firebaseUpdateOrder === "function") {
+            window.__firebaseUpdateOrder(orderId, payload);
+          }
+        }
+      });
+
+      window.__kitchenBridge = {
+        setOrdersData(data, hasBrandNewOrder) {
+          latestOrdersData = data || {};
+          renderAll(latestOrdersData);
+          if (hasBrandNewOrder && soundEnabled) {
+            speakPhrase(getNextAlertPhrase() || NEW_ORDER_PHRASE);
+          }
+        },
+        setCallsData(calls, hasNewCall) {
+          latestCallsData = calls || {};
+          renderStaffCalls(latestCallsData);
+          syncAlertLoop();
+          if (hasNewCall && soundEnabled) {
+            const pending = getPendingStaffCalls(latestCallsData);
+            if (pending.length > 0) {
+              const tbl = pending[0].table || "";
+              speakPhrase(tbl ? `Bàn ${tbl} cần hỗ trợ` : "Có bàn cần hỗ trợ");
+            }
+          }
+        },
+        reportError(msg) {
+          showError(msg);
+        }
+      };
+
+      setInterval(() => {
+        renderAll(latestOrdersData);
+      }, 30000);
+    })();
+  </script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBghiBbYsyo7F5AjWgcQqcCXyoVHi5nVz8",
+      authDomain: "mohinhquan.firebaseapp.com",
+      databaseURL: "https://mohinhquan-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "mohinhquan",
+      storageBucket: "mohinhquan.firebasestorage.app",
+      messagingSenderId: "557675172063",
+      appId: "1:557675172063:web:baf9433c28328878dbd96a"
+    };
+
+    try {
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
+
+      let isFirstOrdersLoad = true;
+      let isFirstCallsLoad = true;
+      const knownOrderIds = new Set();
+      const knownCallIds = new Set();
+
+      window.__firebaseUpdateOrder = function (orderId, payload) {
+        return update(ref(db, `orders/${orderId}`), payload);
+      };
+
+      window.__firebaseDeleteOrders = function (ids) {
+        return Promise.all(ids.map(id => remove(ref(db, `orders/${id}`))));
+      };
+
+      window.__firebaseResolveCall = function (callId) {
+        return update(ref(db, `staffCalls/${callId}`), {
+          status: "resolved",
+          resolvedAt: Date.now()
+        });
+      };
+
+      onValue(ref(db, "orders"), (snapshot) => {
+        const data = snapshot.val() || {};
+        const list = Object.entries(data).map(([id, val]) => ({ id, ...(val || {}) }));
+
+        let hasBrandNewOrder = false;
+        for (const o of list) {
+          if (!knownOrderIds.has(o.id)) {
+            knownOrderIds.add(o.id);
+            if (!isFirstOrdersLoad && (!o.status || o.status === "new")) {
+              hasBrandNewOrder = true;
+            }
+          }
+        }
+        isFirstOrdersLoad = false;
+
+        if (window.__kitchenBridge) {
+          window.__kitchenBridge.setOrdersData(data, hasBrandNewOrder);
+        }
+      }, (err) => {
+        if (window.__kitchenBridge) {
+          window.__kitchenBridge.reportError("Lỗi đọc dữ liệu đơn hàng: " + err.message);
+        }
+      });
+
+      onValue(ref(db, "staffCalls"), (snapshot) => {
+        const calls = snapshot.val() || {};
+        const callList = Object.entries(calls).map(([id, val]) => ({ id, ...(val || {}) }));
+
+        let hasNewCall = false;
+        for (const c of callList) {
+          if (!knownCallIds.has(c.id)) {
+            knownCallIds.add(c.id);
+            if (!isFirstCallsLoad && c.status !== "resolved") {
+              hasNewCall = true;
+            }
+          }
+        }
+        isFirstCallsLoad = false;
+
+        if (window.__kitchenBridge) {
+          window.__kitchenBridge.setCallsData(calls, hasNewCall);
+        }
+      }, (err) => {
+        if (window.__kitchenBridge) {
+          window.__kitchenBridge.reportError("Lỗi đọc dữ liệu gọi nhân viên: " + err.message);
+        }
+      });
+    } catch (err) {
+      if (window.__kitchenBridge) {
+        window.__kitchenBridge.reportError("Lỗi khởi tạo Firebase: " + (err && err.message ? err.message : String(err)));
+      }
+    }
+  </script>
+</body>
+</html>
