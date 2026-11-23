@@ -17,7 +17,6 @@
 
     #error-box { display: none; background: #7f1d1d; border: 1px solid #ef4444; color: #fecaca; padding: 10px 12px; border-radius: 8px; margin-bottom: 14px; font-size: 13px; white-space: pre-wrap; }
 
-    /* Khung doanh thu */
     #revenue-section { display: none; background: #131c31; border: 1px solid #ca8a04; border-radius: 12px; padding: 16px; margin-bottom: 20px; }
     #revenue-section.unlocked { display: block; }
     .revenue-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
@@ -27,6 +26,7 @@
     .revenue-label { font-size: 13px; color: #94a3b8; margin-bottom: 6px; }
     .revenue-amount { font-size: 22px; font-weight: bold; color: #f8fafc; }
     .revenue-sub { font-size: 12px; color: #cbd5e1; margin-top: 4px; }
+    .month-select { background: #0f172a; color: #f8fafc; border: 1px solid #475569; border-radius: 6px; padding: 5px 8px; font-size: 13px; margin-top: 8px; }
 
     .section-title { font-size: 16px; font-weight: bold; margin: 20px 0 12px 0; padding-bottom: 8px; border-bottom: 1px solid #334155; display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
     .section-left { display: flex; align-items: center; gap: 8px; }
@@ -97,9 +97,10 @@
         <div id="rev-today-count" class="revenue-sub">0 đơn</div>
       </div>
       <div class="revenue-card month">
-        <div id="rev-month-label" class="revenue-label">Doanh thu tháng này</div>
+        <div id="rev-month-label" class="revenue-label">Doanh thu tháng</div>
         <div id="rev-month-amount" class="revenue-amount">0đ</div>
         <div id="rev-month-count" class="revenue-sub">0 đơn</div>
+        <select id="month-selector" class="month-select" aria-label="Chọn tháng xem doanh thu"></select>
       </div>
     </div>
   </div>
@@ -133,17 +134,437 @@
     (function () {
       const REVENUE_PIN = "9999";
       const errorBox = document.getElementById("error-box");
-      window.addEventListener("error", (e) => {
+
+      function showError(msg) {
+        if (!errorBox) return;
         errorBox.style.display = "block";
-        errorBox.textContent = "Lỗi giao diện: " + (e.message || e.error || "Không xác định");
+        errorBox.textContent = msg;
+      }
+
+      window.addEventListener("error", (e) => {
+        showError("Lỗi trang: " + (e.message || e.error || "Không xác định"));
+      });
+
+      window.addEventListener("unhandledrejection", (e) => {
+        const reason = e.reason && e.reason.message ? e.reason.message : String(e.reason || "Lỗi tải dữ liệu");
+        showError("Lỗi kết nối: " + reason);
       });
 
       let soundEnabled = false;
       let revenueUnlocked = false;
+      let selectedMonthKey = null;
       let latestOrdersData = {};
       const expandedDays = new Set();
       const customFolders = new Set();
 
       function getDateKeyByOffset(offsetDays = 0) {
         const d = new Date();
-        d
+        d.setDate(d.getDate() + offsetDays);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+      }
+
+      function getDateKey(ts) {
+        const d = ts ? new Date(ts) : new Date();
+        if (Number.isNaN(d.getTime())) return getDateKeyByOffset(0);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+      }
+
+      function getMonthKey(ts) {
+        const d = ts ? new Date(ts) : new Date();
+        if (Number.isNaN(d.getTime())) return getMonthKey(Date.now());
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        return `${y}-${m}`;
+      }
+
+      function formatDateVN(dateKey) {
+        const parts = String(dateKey || "").split("-");
+        if (parts.length !== 3) return dateKey;
+        const [y, m, d] = parts;
+        return `${d}/${m}/${y}`;
+      }
+
+      function formatMonthVN(monthKey) {
+        const parts = String(monthKey || "").split("-");
+        if (parts.length !== 2) return monthKey;
+        const [y, m] = parts;
+        return `Tháng ${m}/${y}`;
+      }
+
+      function escapeHtml(str = "") {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function playBeep() {
+        if (!soundEnabled) return;
+        try {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          const ctx = new AudioCtx();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(880, ctx.currentTime);
+          gain.gain.setValueAtTime(0.2, ctx.currentTime);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.25);
+        } catch (_) {}
+      }
+
+      function renderRevenue(list) {
+        const now = Date.now();
+        const todayKey = getDateKey(now);
+        const currentMonthKey = getMonthKey(now);
+
+        const monthSet = new Set([currentMonthKey]);
+        for (const o of list) {
+          monthSet.add(getMonthKey((o.createdAt || o.completedAt) || now));
+        }
+        const sortedMonths = Array.from(monthSet).sort((a, b) => b.localeCompare(a));
+
+        if (!selectedMonthKey || !monthSet.has(selectedMonthKey)) {
+          selectedMonthKey = currentMonthKey;
+        }
+
+        const selectEl = document.getElementById("month-selector");
+        selectEl.innerHTML = sortedMonths
+          .map(mk => `<option value="${escapeHtml(mk)}" ${mk === selectedMonthKey ? "selected" : ""}>${escapeHtml(formatMonthVN(mk))}</option>`)
+          .join("");
+
+        const todayOrders = list.filter(o => getDateKey((o.createdAt || o.completedAt) || now) === todayKey);
+        const monthOrders = list.filter(o => getMonthKey((o.createdAt || o.completedAt) || now) === selectedMonthKey);
+
+        const todayTotal = todayOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+        const monthTotal = monthOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+
+        document.getElementById("rev-today-label").textContent = `Doanh thu hôm nay (${formatDateVN(todayKey)})`;
+        document.getElementById("rev-today-amount").textContent = `${todayTotal.toLocaleString("vi-VN")}đ`;
+        document.getElementById("rev-today-count").textContent = `${todayOrders.length} đơn`;
+
+        document.getElementById("rev-month-label").textContent = `Doanh thu ${formatMonthVN(selectedMonthKey)}`;
+        document.getElementById("rev-month-amount").textContent = `${monthTotal.toLocaleString("vi-VN")}đ`;
+        document.getElementById("rev-month-count").textContent = `${monthOrders.length} đơn`;
+      }
+
+      function renderOrderCard(o) {
+        const isDone = o.status === "done";
+        const tableText = escapeHtml(o.table || "Mang về");
+        const modeText = o.orderType ? `<span class="mode-tag">${escapeHtml(o.orderType)}</span>` : "";
+        const timeText = o.createdAt
+          ? new Date(o.createdAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
+          : "";
+
+        const itemsHtml = (o.items || []).map(i => `
+          <li style="margin-bottom:6px;">
+            <div><strong>${escapeHtml(i.qty)}x</strong> ${escapeHtml(i.name)}</div>
+            ${i.note ? `<div class="item-note">↳ Ghi chú món: ${escapeHtml(i.note)}</div>` : ""}
+          </li>
+        `).join("");
+
+        return `
+          <div class="order-card ${isDone ? "done" : "new"}">
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+                <div>
+                  <strong style="font-size:18px;">Bàn: ${tableText}</strong>
+                  ${modeText}
+                </div>
+                <span class="badge">${isDone ? "ĐÃ XONG" : "ĐƠN MỚI"}</span>
+              </div>
+              ${timeText ? `<div style="font-size:12px; color:#94a3b8; margin-top:4px;">Lúc ${timeText}</div>` : ""}
+              <ul style="padding-left:18px; margin:10px 0;">
+                ${itemsHtml}
+              </ul>
+              ${o.note ? `<div class="order-note">Ghi chú đơn: ${escapeHtml(o.note)}</div>` : ""}
+            </div>
+
+            <div>
+              <div style="font-weight:bold;">Tổng: ${(Number(o.total) || 0).toLocaleString("vi-VN")}đ</div>
+              <div class="actions">
+                ${isDone
+                  ? `<button type="button" class="btn-undo" data-action="status" data-id="${escapeHtml(o.id)}" data-status="new">↩ Khôi phục lại đơn mới</button>`
+                  : `<button type="button" class="btn-done" data-action="status" data-id="${escapeHtml(o.id)}" data-status="done">✔ Hoàn tất</button>`
+                }
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderAll(data) {
+        const todayKey = getDateKeyByOffset(0);
+        document.getElementById("today-label").textContent =
+          `Hôm nay: ${formatDateVN(todayKey)} — Tự động chuyển sang thư mục ngày sau 00:00`;
+
+        const list = Object.entries(data || {}).map(([id, val]) => ({ id, ...(val || {}) }));
+        list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+        renderRevenue(list);
+
+        const todayOrders = list.filter(o => getDateKey(o.createdAt || o.completedAt || Date.now()) === todayKey);
+        const newOrders = todayOrders.filter(o => o.status !== "done");
+        const doneOrders = todayOrders.filter(o => o.status === "done");
+
+        document.getElementById("new-count").textContent = newOrders.length;
+        document.getElementById("done-count").textContent = doneOrders.length;
+
+        document.getElementById("new-orders-grid").innerHTML = newOrders.length
+          ? newOrders.map(renderOrderCard).join("")
+          : `<div class="empty-msg">Hiện không có đơn mới nào hôm nay.</div>`;
+
+        document.getElementById("done-orders-grid").innerHTML = doneOrders.length
+          ? doneOrders.map(renderOrderCard).join("")
+          : `<div class="empty-msg">Chưa có đơn nào hoàn tất hôm nay.</div>`;
+
+        const archiveOrders = list.filter(o => getDateKey(o.createdAt || o.completedAt || Date.now()) !== todayKey);
+        const groupedByDay = new Map();
+
+        for (const order of archiveOrders) {
+          const dKey = getDateKey(order.createdAt || order.completedAt || Date.now());
+          if (!groupedByDay.has(dKey)) groupedByDay.set(dKey, []);
+          groupedByDay.get(dKey).push(order);
+        }
+
+        for (const customKey of customFolders) {
+          if (customKey !== todayKey && !groupedByDay.has(customKey)) {
+            groupedByDay.set(customKey, []);
+          }
+        }
+
+        const sortedDays = Array.from(groupedByDay.keys()).sort((a, b) => b.localeCompare(a));
+        document.getElementById("archive-days-count").textContent = `${sortedDays.length} ngày`;
+
+        const archiveContainer = document.getElementById("archive-days-container");
+        archiveContainer.innerHTML = sortedDays.map(dateKey => {
+          const dayList = groupedByDay.get(dateKey) || [];
+          const dayTotal = dayList.reduce((sum, item) => sum + (Number(item.total) || 0), 0);
+          const isOpen = expandedDays.has(dateKey);
+
+          return `
+            <div class="day-folder" data-date="${escapeHtml(dateKey)}">
+              <div class="day-header" data-action="toggle-day" data-date="${escapeHtml(dateKey)}">
+                <div class="day-title">
+                  <span class="day-title-text">📅 Ngày ${formatDateVN(dateKey)}</span>
+                  <span class="day-meta">(${dayList.length} đơn • Tổng: ${dayTotal.toLocaleString("vi-VN")}đ)</span>
+                </div>
+                <div class="day-controls">
+                  <button type="button" class="btn-toggle" data-action="toggle-day" data-date="${escapeHtml(dateKey)}">
+                    ${isOpen ? "▲ Thu gọn" : "▼ Xem đơn"}
+                  </button>
+                  <button type="button" class="btn-delete-day" data-action="delete-day" data-date="${escapeHtml(dateKey)}">
+                    🗑 Xóa ngày này
+                  </button>
+                </div>
+              </div>
+              <div class="grid day-orders ${isOpen ? "is-open" : ""}">
+                ${dayList.length
+                  ? dayList.map(renderOrderCard).join("")
+                  : `<div class="empty-msg">Chưa có đơn nào trong thư mục ngày ${formatDateVN(dateKey)}.</div>`
+                }
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+
+      customFolders.add(getDateKeyByOffset(-1));
+      customFolders.add(getDateKeyByOffset(-2));
+      renderAll(latestOrdersData);
+
+      document.getElementById("month-selector").addEventListener("change", (e) => {
+        selectedMonthKey = e.target.value;
+        renderAll(latestOrdersData);
+      });
+
+      document.getElementById("btn-revenue").addEventListener("click", () => {
+        const revBox = document.getElementById("revenue-section");
+        if (revenueUnlocked) {
+          revBox.classList.toggle("unlocked");
+          return;
+        }
+        const pin = prompt("Nhập mật khẩu để xem mục Doanh thu:");
+        if (pin === null) return;
+        if (pin.trim() === REVENUE_PIN) {
+          revenueUnlocked = true;
+          revBox.classList.add("unlocked");
+          renderAll(latestOrdersData);
+        } else {
+          alert("Mật khẩu không đúng!");
+        }
+      });
+
+      document.getElementById("btn-lock-revenue").addEventListener("click", () => {
+        revenueUnlocked = false;
+        document.getElementById("revenue-section").classList.remove("unlocked");
+      });
+
+      document.getElementById("btn-sound").addEventListener("click", () => {
+        soundEnabled = true;
+        playBeep();
+        alert("Đã bật chuông báo khi có đơn mới!");
+      });
+
+      document.getElementById("btn-add-folder").addEventListener("click", () => {
+        const input = prompt("Nhập ngày muốn tạo thư mục (DD/MM/YYYY, ví dụ: 21/11/2026):");
+        if (!input) return;
+        const match = input.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (!match) {
+          alert("Vui lòng nhập đúng định dạng DD/MM/YYYY (ví dụ: 21/11/2026).");
+          return;
+        }
+        const day = String(match[1]).padStart(2, "0");
+        const month = String(match[2]).padStart(2, "0");
+        const year = match[3];
+        const dateKey = `${year}-${month}-${day}`;
+        customFolders.add(dateKey);
+        expandedDays.add(dateKey);
+        renderAll(latestOrdersData);
+      });
+
+      document.addEventListener("click", async (e) => {
+        const target = e.target.closest("[data-action]");
+        if (!target) return;
+
+        const action = target.getAttribute("data-action");
+
+        if (action === "toggle-day") {
+          const dateKey = target.getAttribute("data-date");
+          if (!dateKey) return;
+          if (expandedDays.has(dateKey)) {
+            expandedDays.delete(dateKey);
+          } else {
+            expandedDays.add(dateKey);
+          }
+          renderAll(latestOrdersData);
+          return;
+        }
+
+        if (action === "delete-day") {
+          e.stopPropagation();
+          const dateKey = target.getAttribute("data-date");
+          if (!dateKey) return;
+
+          const label = formatDateVN(dateKey);
+          const targetIds = Object.entries(latestOrdersData)
+            .filter(([, val]) => getDateKey((val && (val.createdAt || val.completedAt)) || Date.now()) === dateKey)
+            .map(([id]) => id);
+
+          if (!targetIds.length) {
+            customFolders.delete(dateKey);
+            expandedDays.delete(dateKey);
+            renderAll(latestOrdersData);
+            return;
+          }
+
+          const ok = confirm(`Xóa toàn bộ ${targetIds.length} đơn của ngày ${label}?`);
+          if (!ok) return;
+
+          if (typeof window.__firebaseDeleteOrders === "function") {
+            await window.__firebaseDeleteOrders(targetIds);
+          }
+          customFolders.delete(dateKey);
+          expandedDays.delete(dateKey);
+          renderAll(latestOrdersData);
+          return;
+        }
+
+        if (action === "status") {
+          const orderId = target.getAttribute("data-id");
+          const status = target.getAttribute("data-status");
+          if (!orderId || !status) return;
+          const payload = { status };
+          if (status === "done") payload.completedAt = Date.now();
+          if (typeof window.__firebaseUpdateOrder === "function") {
+            window.__firebaseUpdateOrder(orderId, payload);
+          }
+        }
+      });
+
+      window.__kitchenBridge = {
+        setOrdersData(data, shouldBeep) {
+          latestOrdersData = data || {};
+          if (shouldBeep) playBeep();
+          renderAll(latestOrdersData);
+        },
+        reportError(msg) {
+          showError(msg);
+        }
+      };
+
+      setInterval(() => {
+        renderAll(latestOrdersData);
+      }, 30000);
+    })();
+  </script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBghiBbYsyo7F5AjWgcQqcCXyoVHi5nVz8",
+      authDomain: "mohinhquan.firebaseapp.com",
+      databaseURL: "https://mohinhquan-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "mohinhquan",
+      storageBucket: "mohinhquan.firebasestorage.app",
+      messagingSenderId: "557675172063",
+      appId: "1:557675172063:web:baf9433c28328878dbd96a"
+    };
+
+    try {
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
+
+      let isFirstLoad = true;
+      const knownIds = new Set();
+
+      window.__firebaseUpdateOrder = function (orderId, payload) {
+        return update(ref(db, `orders/${orderId}`), payload);
+      };
+
+      window.__firebaseDeleteOrders = function (ids) {
+        return Promise.all(ids.map(id => remove(ref(db, `orders/${id}`))));
+      };
+
+      onValue(ref(db, "orders"), (snapshot) => {
+        const data = snapshot.val() || {};
+        const list = Object.entries(data).map(([id, val]) => ({ id, ...(val || {}) }));
+
+        let hasNewOrder = false;
+        for (const o of list) {
+          if (!knownIds.has(o.id)) {
+            knownIds.add(o.id);
+            if (!isFirstLoad && (!o.status || o.status === "new")) {
+              hasNewOrder = true;
+            }
+          }
+        }
+        isFirstLoad = false;
+
+        if (window.__kitchenBridge) {
+          window.__kitchenBridge.setOrdersData(data, hasNewOrder);
+        }
+      }, (err) => {
+        if (window.__kitchenBridge) {
+          window.__kitchenBridge.reportError("Lỗi đọc dữ liệu Firebase: " + err.message);
+        }
+      });
+    } catch (err) {
+      if (window.__kitchenBridge) {
+        window.__kitchenBridge.reportError("Lỗi khởi tạo Firebase: " + (err && err.message ? err.message : String(err)));
+      }
+    }
+  </script>
+</body>
+</html>
