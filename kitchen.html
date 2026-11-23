@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quầy Tiếp Nhận Đơn</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 16px; background: #0f172a; color: #f8fafc; }
+    .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+    .sound-btn { padding: 10px 14px; border: none; border-radius: 8px; background: #38bdf8; color: #082f49; font-weight: bold; cursor: pointer; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+    .order-card { background: #1e293b; border-left: 5px solid #22c55e; border-radius: 10px; padding: 14px; }
+    .order-card.making { border-left-color: #f59e0b; }
+    .order-card.done { border-left-color: #64748b; opacity: 0.65; }
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; background: #22c55e; color: #052e16; }
+    .making .badge { background: #f59e0b; color: #451a03; }
+    .done .badge { background: #64748b; color: #fff; }
+    .actions button { margin-top: 10px; margin-right: 6px; padding: 7px 11px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <h2 style="margin:0;">QUẦY TIẾP NHẬN ĐƠN REALTIME</h2>
+    <button class="sound-btn" onclick="enableSound()">Bật chuông báo đơn</button>
+  </div>
+  <div id="orders-grid" class="grid"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBghiBbYsyo7F5AjWgcQqcCXyoVHi5nVz8",
+      authDomain: "mohinhquan.firebaseapp.com",
+      databaseURL: "https://mohinhquan-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "mohinhquan",
+      storageBucket: "mohinhquan.firebasestorage.app",
+      messagingSenderId: "557675172063",
+      appId: "1:557675172063:web:baf9433c28328878dbd96a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    let soundEnabled = false;
+    let isFirstLoad = true;
+    const knownIds = new Set();
+
+    window.enableSound = function() {
+      soundEnabled = true;
+      playBeep();
+      alert("Đã bật chuông báo khi có đơn mới!");
+    };
+
+    function playBeep() {
+      if (!soundEnabled) return;
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.25);
+    }
+
+    window.setStatus = function(orderId, status) {
+      update(ref(db, `orders/${orderId}`), { status });
+    };
+
+    onValue(ref(db, "orders"), (snapshot) => {
+      const data = snapshot.val() || {};
+      const list = Object.entries(data).map(([id, val]) => ({ id, ...val }));
+      list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+      let hasNewOrder = false;
+      for (const o of list) {
+        if (!knownIds.has(o.id)) {
+          knownIds.add(o.id);
+          if (!isFirstLoad && o.status === "new") hasNewOrder = true;
+        }
+      }
+      isFirstLoad = false;
+      if (hasNewOrder) playBeep();
+
+      const statusLabel = { new: "ĐƠN MỚI", making: "ĐANG PHA", done: "ĐÃ XONG" };
+      const grid = document.getElementById("orders-grid");
+
+      grid.innerHTML = list.map(o => `
+        <div class="order-card ${o.status || 'new'}">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong style="font-size:18px;">Bàn: ${o.table}</strong>
+            <span class="badge">${statusLabel[o.status] || "ĐƠN MỚI"}</span>
+          </div>
+          <ul style="padding-left:18px; margin:10px 0;">
+            ${(o.items || []).map(i => `<li><strong>${i.qty}x</strong> ${i.name}</li>`).join("")}
+          </ul>
+          ${o.note ? `<div style="color:#fde047; font-size:13px; margin-bottom:6px;">Ghi chú: ${o.note}</div>` : ""}
+          <div style="font-weight:bold;">Tổng: ${(o.total || 0).toLocaleString("vi-VN")}đ</div>
+          <div class="actions">
+            <button style="background:#f59e0b;color:#111;" onclick="setStatus('${o.id}', 'making')">Đang pha</button>
+            <button style="background:#22c55e;color:#111;" onclick="setStatus('${o.id}', 'done')">Hoàn tất</button>
+          </div>
+        </div>
+      `).join("");
+    });
+  </script>
+</body>
+</html>

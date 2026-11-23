@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gọi Món Tại Bàn</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 16px; background: #f4f4f5; color: #111; }
+    .header { background: #111; color: #fff; padding: 14px 16px; border-radius: 12px; margin-bottom: 14px; }
+    .card { background: #fff; padding: 12px 14px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .btn { padding: 8px 13px; border: none; border-radius: 8px; background: #18181b; color: #fff; font-size: 15px; cursor: pointer; }
+    .note-box { width: 100%; box-sizing: border-box; padding: 10px; border-radius: 10px; border: 1px solid #d4d4d8; margin-top: 8px; background: #fff; }
+    .cart-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #111; color: #fff; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; }
+    .send-btn { background: #22c55e; color: #052e16; font-weight: bold; padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div style="font-size: 13px; opacity: 0.8;">MENU GỌI MÓN NHANH</div>
+    <h2 id="table-title" style="margin: 4px 0 0;">Bàn ...</h2>
+  </div>
+
+  <div id="menu-list"></div>
+
+  <input id="order-note" class="note-box" type="text" placeholder="Ghi chú thêm (vd: ít đá, ít ngọt, mang ra nhanh)..." />
+
+  <div style="height: 80px;"></div>
+  <div class="cart-bar">
+    <span id="cart-summary">0 món - 0đ</span>
+    <button id="send-btn" class="send-btn" onclick="submitOrder()">Gửi đơn</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBghiBbYsyo7F5AjWgcQqcCXyoVHi5nVz8",
+      authDomain: "mohinhquan.firebaseapp.com",
+      databaseURL: "https://mohinhquan-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "mohinhquan",
+      storageBucket: "mohinhquan.firebasestorage.app",
+      messagingSenderId: "557675172063",
+      appId: "1:557675172063:web:baf9433c28328878dbd96a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const params = new URLSearchParams(window.location.search);
+    const tableNumber = params.get("table") || "Mang về";
+    document.getElementById("table-title").innerText = `Bàn: ${tableNumber}`;
+
+    const MENU = [
+      { id: 1, name: "Cà phê đen đá", price: 20000 },
+      { id: 2, name: "Cà phê sữa đá", price: 25000 },
+      { id: 3, name: "Trà đào cam sả", price: 30000 },
+      { id: 4, name: "Trà chanh", price: 18000 }
+    ];
+
+    const cart = {};
+
+    window.changeQty = function(id, delta) {
+      const next = (cart[id] || 0) + delta;
+      if (next <= 0) delete cart[id];
+      else cart[id] = next;
+      renderMenu();
+    };
+
+    function renderMenu() {
+      const box = document.getElementById("menu-list");
+      box.innerHTML = MENU.map(item => {
+        const qty = cart[item.id] || 0;
+        return `
+          <div class="card">
+            <div>
+              <div style="font-weight:bold; font-size:16px;">${item.name}</div>
+              <div style="color:#52525b; margin-top:3px;">${item.price.toLocaleString("vi-VN")}đ</div>
+            </div>
+            <div>
+              <button class="btn" onclick="changeQty(${item.id}, -1)">-</button>
+              <span style="margin: 0 10px; font-weight:bold;">${qty}</span>
+              <button class="btn" onclick="changeQty(${item.id}, 1)">+</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+      updateCartBar();
+    }
+
+    function updateCartBar() {
+      let totalQty = 0, totalPrice = 0;
+      for (const [id, qty] of Object.entries(cart)) {
+        const item = MENU.find(m => m.id === Number(id));
+        if (item) {
+          totalQty += qty;
+          totalPrice += item.price * qty;
+        }
+      }
+      document.getElementById("cart-summary").innerText = `${totalQty} món - ${totalPrice.toLocaleString("vi-VN")}đ`;
+    }
+
+    window.submitOrder = async function() {
+      const items = Object.entries(cart).map(([id, qty]) => {
+        const item = MENU.find(m => m.id === Number(id));
+        return { id: item.id, name: item.name, price: item.price, qty };
+      });
+
+      if (items.length === 0) {
+        alert("Bạn hãy chọn ít nhất 1 món trước khi gửi!");
+        return;
+      }
+
+      const total = items.reduce((sum, i) => sum + i.price * i.qty, 0);
+      const note = document.getElementById("order-note").value.trim();
+      const btn = document.getElementById("send-btn");
+      btn.disabled = true;
+      btn.innerText = "Đang gửi...";
+
+      try {
+        await push(ref(db, "orders"), {
+          table: tableNumber,
+          items,
+          total,
+          note,
+          status: "new",
+          createdAt: Date.now()
+        });
+
+        for (const k of Object.keys(cart)) delete cart[k];
+        document.getElementById("order-note").value = "";
+        renderMenu();
+        alert(`Đã gửi đơn cho ${tableNumber}! Quầy đang tiếp nhận.`);
+      } catch (err) {
+        alert("Lỗi gửi đơn: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Gửi đơn";
+      }
+    };
+
+    renderMenu();
+  </script>
+</body>
+</html>
