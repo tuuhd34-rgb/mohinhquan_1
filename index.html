@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
- 
+  <title>Menu Gọi Món</title>
   <style>
     :root {
       --bg: #f4f5f7;
@@ -21,7 +21,7 @@
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
       margin: 0;
-      padding: 14px 14px 235px;
+      padding: 14px 14px 255px;
       background: var(--bg);
       color: var(--text);
     }
@@ -33,6 +33,11 @@
       border-radius: 14px;
       margin-bottom: 12px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
     }
 
     .header-sub {
@@ -44,8 +49,87 @@
 
     .header-title {
       margin: 4px 0 0;
-      font-size: 21px;
+      font-size: 20px;
       font-weight: 700;
+    }
+
+    .support-btn {
+      background: #f59e0b;
+      color: #111827;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .support-btn:hover {
+      background: #d97706;
+      color: #fff;
+    }
+
+    /* Hộp chọn số bàn chỉ hiện khi cần gọi nhân viên hỗ trợ */
+    .support-panel {
+      display: none;
+      background: #fffbeb;
+      border: 2px solid #f59e0b;
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 14px;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.18);
+    }
+
+    .support-panel.open {
+      display: block;
+    }
+
+    .support-panel-title {
+      font-weight: 800;
+      font-size: 15px;
+      margin-bottom: 10px;
+      color: #78350f;
+    }
+
+    .support-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .support-table-select {
+      flex: 1;
+      min-width: 170px;
+      padding: 11px 12px;
+      border-radius: 10px;
+      border: 2px solid #92400e;
+      font-size: 16px;
+      font-weight: 800;
+      background: #fff;
+      color: #111827;
+    }
+
+    .support-send-btn {
+      background: #dc2626;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 11px 16px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .support-cancel-btn {
+      background: #e5e7eb;
+      color: #111827;
+      border: none;
+      border-radius: 10px;
+      padding: 11px 12px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
     }
 
     .tabs {
@@ -197,7 +281,6 @@
       font-size: 14px;
     }
 
-    /* Khu vực đặt đơn & chọn bàn cố định phía dưới */
     .bottom-panel {
       position: fixed;
       bottom: 0;
@@ -326,7 +409,8 @@
       white-space: nowrap;
     }
 
-    .send-btn:disabled {
+    .send-btn:disabled,
+    .support-send-btn:disabled {
       opacity: 0.6;
       cursor: not-allowed;
     }
@@ -334,15 +418,40 @@
 </head>
 <body>
   <div class="header">
-    <div class="header-sub">Menu gọi món tại quầy</div>
-    <h2 id="table-title" class="header-title">kinh chao quy khach</h2>
+    <div>
+      <div class="header-sub">Menu gọi món tại quầy</div>
+      <h2 id="table-title" class="header-title">kinh chao quy khach</h2>
+    </div>
+    <button type="button" class="support-btn" onclick="toggleSupportPanel()">🙋 Gọi nhân viên hỗ trợ</button>
+  </div>
+
+  <!-- Chỉ mở ra khi khách nhấn Gọi nhân viên hỗ trợ -->
+  <div id="support-panel" class="support-panel">
+    <div class="support-panel-title">Chọn số bàn cần nhân viên hỗ trợ:</div>
+    <div class="support-controls">
+      <select id="support-table-select" class="support-table-select">
+        <option value="">-- Chọn số bàn (1 - 10) --</option>
+        <option value="1">Bàn 1</option>
+        <option value="2">Bàn 2</option>
+        <option value="3">Bàn 3</option>
+        <option value="4">Bàn 4</option>
+        <option value="5">Bàn 5</option>
+        <option value="6">Bàn 6</option>
+        <option value="7">Bàn 7</option>
+        <option value="8">Bàn 8</option>
+        <option value="9">Bàn 9</option>
+        <option value="10">Bàn 10</option>
+      </select>
+      <button id="support-send-btn" type="button" class="support-send-btn" onclick="sendSupportCall()">Gửi gọi hỗ trợ</button>
+      <button type="button" class="support-cancel-btn" onclick="toggleSupportPanel(false)">Đóng</button>
+    </div>
   </div>
 
   <div class="tabs">
-    <button class="tab-btn active" data-cat="all" onclick="setCategory('all')">Tất cả</button>
-    <button class="tab-btn" data-cat="Đồ uống" onclick="setCategory('Đồ uống')">Đồ uống</button>
-    <button class="tab-btn" data-cat="Đồ ăn" onclick="setCategory('Đồ ăn')">Đồ ăn</button>
-    <button class="tab-btn" data-cat="Mì cay" onclick="setCategory('Mì cay')">Mì cay</button>
+    <button type="button" class="tab-btn active" data-cat="all" onclick="setCategory('all')">Tất cả</button>
+    <button type="button" class="tab-btn" data-cat="Đồ uống" onclick="setCategory('Đồ uống')">Đồ uống</button>
+    <button type="button" class="tab-btn" data-cat="Đồ ăn" onclick="setCategory('Đồ ăn')">Đồ ăn</button>
+    <button type="button" class="tab-btn" data-cat="Mì cay" onclick="setCategory('Mì cay')">Mì cay</button>
   </div>
 
   <div id="menu-list"></div>
@@ -396,7 +505,7 @@
 
     <div class="cart-row">
       <span id="cart-summary" class="cart-summary">0 món - 0đ</span>
-      <button id="send-btn" class="send-btn" onclick="submitOrder()">Gửi đơn</button>
+      <button id="send-btn" type="button" class="send-btn" onclick="submitOrder()">Gửi đơn</button>
     </div>
   </div>
 
@@ -446,8 +555,6 @@
     const cart = {};
     const itemNotes = {};
     let activeCategory = "all";
-
-    // Bắt buộc người dùng tự tay bấm chọn ("dine_in" hoặc "takeaway"), không chọn sẵn
     let selectedMode = "";
 
     const orderBoxEl = document.getElementById("order-box");
@@ -455,6 +562,49 @@
     const tableBigBoxEl = document.getElementById("table-big-box");
     const btnDineInEl = document.getElementById("btn-dine-in");
     const btnTakeawayEl = document.getElementById("btn-takeaway");
+    const supportPanelEl = document.getElementById("support-panel");
+    const supportTableSelectEl = document.getElementById("support-table-select");
+    const supportSendBtnEl = document.getElementById("support-send-btn");
+
+    window.toggleSupportPanel = function(forceState) {
+      const nextOpen = typeof forceState === "boolean"
+        ? forceState
+        : !supportPanelEl.classList.contains("open");
+      supportPanelEl.classList.toggle("open", nextOpen);
+      if (nextOpen) {
+        supportTableSelectEl.value = "";
+        supportTableSelectEl.focus();
+      }
+    };
+
+    window.sendSupportCall = async function() {
+      const chosenTable = supportTableSelectEl.value.trim();
+      if (!chosenTable) {
+        alert("Vui lòng chọn số bàn (1 - 10) cần hỗ trợ!");
+        supportTableSelectEl.focus();
+        return;
+      }
+
+      supportSendBtnEl.disabled = true;
+      supportSendBtnEl.innerText = "Đang gửi...";
+
+      try {
+        await push(ref(db, "staffCalls"), {
+          table: chosenTable,
+          message: `Bàn ${chosenTable} cần hỗ trợ`,
+          status: "pending",
+          createdAt: Date.now()
+        });
+        supportTableSelectEl.value = "";
+        supportPanelEl.classList.remove("open");
+        alert(`Đã gửi yêu cầu: Bàn ${chosenTable} cần hỗ trợ.`);
+      } catch (err) {
+        alert("Lỗi gửi gọi hỗ trợ: " + err.message);
+      } finally {
+        supportSendBtnEl.disabled = false;
+        supportSendBtnEl.innerText = "Gửi gọi hỗ trợ";
+      }
+    };
 
     window.selectOrderMode = function(mode) {
       selectedMode = mode;
@@ -534,9 +684,9 @@
               <div class="item-price">${item.price.toLocaleString("vi-VN")}đ</div>
             </div>
             <div class="qty-controls">
-              <button class="btn-qty" onclick="changeQty(${item.id}, -1)">-</button>
+              <button type="button" class="btn-qty" onclick="changeQty(${item.id}, -1)">-</button>
               <span class="qty-val">${qty}</span>
-              <button class="btn-qty" onclick="changeQty(${item.id}, 1)">+</button>
+              <button type="button" class="btn-qty" onclick="changeQty(${item.id}, 1)">+</button>
             </div>
           </div>
           <div class="item-note-row">
