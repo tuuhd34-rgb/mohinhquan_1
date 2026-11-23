@@ -6,6 +6,65 @@
   <title>Quầy Tiếp Nhận Đơn</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 0; padding: 16px; background: #0f172a; color: #f8fafc; }
+
+    /* Màn hình đăng nhập khi truy cập link */
+    #login-screen {
+      min-height: calc(100vh - 32px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #login-screen.hidden { display: none; }
+    .login-card {
+      width: 100%;
+      max-width: 380px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 14px;
+      padding: 22px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+    }
+    .login-title { margin: 0 0 6px 0; font-size: 20px; color: #f8fafc; }
+    .login-sub { margin: 0 0 18px 0; font-size: 13px; color: #94a3b8; }
+    .login-field { margin-bottom: 14px; }
+    .login-label { display: block; font-size: 13px; font-weight: bold; color: #cbd5e1; margin-bottom: 6px; }
+    .login-input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #475569;
+      background: #0f172a;
+      color: #f8fafc;
+      font-size: 15px;
+    }
+    .login-input:focus { outline: none; border-color: #38bdf8; }
+    .login-btn {
+      width: 100%;
+      padding: 11px 14px;
+      border: none;
+      border-radius: 8px;
+      background: #22c55e;
+      color: #052e16;
+      font-weight: bold;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    .login-btn:hover { background: #16a34a; }
+    .login-error {
+      display: none;
+      margin-top: 10px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: #7f1d1d;
+      border: 1px solid #ef4444;
+      color: #fecaca;
+      font-size: 13px;
+    }
+
+    #app-shell { display: none; }
+    #app-shell.unlocked { display: block; }
+
     .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
     .top-actions { display: flex; gap: 8px; flex-wrap: wrap; }
     .sound-btn { padding: 10px 14px; border: none; border-radius: 8px; background: #38bdf8; color: #082f49; font-weight: bold; cursor: pointer; }
@@ -89,75 +148,167 @@
   </style>
 </head>
 <body>
-  <div id="error-box"></div>
-
-  <div id="support-alerts-box">
-    <div class="support-title">🚨 YÊU CẦU HỖ TRỢ TỪ BÀN</div>
-    <div id="support-alerts-list" class="support-list"></div>
-  </div>
-
-  <div class="top">
-    <div>
-      <h2 style="margin:0;">QUẦY TIẾP NHẬN ĐƠN</h2>
-      <div id="today-label" style="font-size:13px; color:#94a3b8; margin-top:4px;"></div>
-    </div>
-    <div class="top-actions">
-      <button type="button" id="btn-mute-alert" class="mute-btn">🔇 Đang kêu... (Bấm dừng)</button>
-      <button type="button" id="btn-revenue" class="revenue-btn">💰 Doanh thu</button>
-      <button type="button" id="btn-sound" class="sound-btn">🔔 Bật chuông báo đơn</button>
-    </div>
-  </div>
-
-  <div id="revenue-section">
-    <div class="revenue-header">
-      <div style="font-size:16px; font-weight:bold; color:#fde047;">💰 BÁO CÁO DOANH THU</div>
-      <button type="button" id="btn-lock-revenue" class="lock-btn">🔒 Khóa lại</button>
-    </div>
-    <div class="revenue-grid">
-      <div class="revenue-card">
-        <div id="rev-today-label" class="revenue-label">Doanh thu hôm nay</div>
-        <div id="rev-today-amount" class="revenue-amount">0đ</div>
-        <div id="rev-today-count" class="revenue-sub">0 đơn</div>
+  <div id="login-screen">
+    <form id="login-form" class="login-card" autocomplete="off">
+      <h2 class="login-title">🔐 Đăng nhập Quầy Tiếp Nhận</h2>
+      <p class="login-sub">Vui lòng nhập tài khoản và mật khẩu để truy cập hệ thống.</p>
+      <div class="login-field">
+        <label for="login-username" class="login-label">Tài khoản</label>
+        <input id="login-username" type="text" class="login-input" placeholder="Nhập tài khoản..." required />
       </div>
-      <div class="revenue-card month">
-        <div id="rev-month-label" class="revenue-label">Doanh thu tháng</div>
-        <div id="rev-month-amount" class="revenue-amount">0đ</div>
-        <div id="rev-month-count" class="revenue-sub">0 đơn</div>
-        <select id="month-selector" class="month-select" aria-label="Chọn tháng xem doanh thu"></select>
+      <div class="login-field">
+        <label for="login-password" class="login-label">Mật khẩu</label>
+        <input id="login-password" type="password" class="login-input" placeholder="Nhập mật khẩu..." required />
+      </div>
+      <button type="submit" class="login-btn">Đăng nhập</button>
+      <div id="login-error" class="login-error">Tài khoản hoặc mật khẩu không đúng!</div>
+    </form>
+  </div>
+
+  <div id="app-shell">
+    <div id="error-box"></div>
+
+    <div id="support-alerts-box">
+      <div class="support-title">🚨 YÊU CẦU HỖ TRỢ TỪ BÀN</div>
+      <div id="support-alerts-list" class="support-list"></div>
+    </div>
+
+    <div class="top">
+      <div>
+        <h2 style="margin:0;">QUẦY TIẾP NHẬN ĐƠN</h2>
+        <div id="today-label" style="font-size:13px; color:#94a3b8; margin-top:4px;"></div>
+      </div>
+      <div class="top-actions">
+        <button type="button" id="btn-mute-alert" class="mute-btn">🔇 Đang kêu... (Bấm dừng)</button>
+        <button type="button" id="btn-revenue" class="revenue-btn">💰 Doanh thu</button>
+        <button type="button" id="btn-sound" class="sound-btn">🔔 Bật chuông báo đơn</button>
+        <button type="button" id="btn-logout" class="lock-btn">🚪 Đăng xuất</button>
       </div>
     </div>
-  </div>
 
-  <div class="section-title">
-    <div class="section-left">
-      <span>🟢 ĐƠN MỚI (HÔM NAY)</span>
-      <span id="new-count" class="count-pill active">0</span>
+    <div id="revenue-section">
+      <div class="revenue-header">
+        <div style="font-size:16px; font-weight:bold; color:#fde047;">💰 BÁO CÁO DOANH THU</div>
+        <button type="button" id="btn-lock-revenue" class="lock-btn">🔒 Khóa lại</button>
+      </div>
+      <div class="revenue-grid">
+        <div class="revenue-card">
+          <div id="rev-today-label" class="revenue-label">Doanh thu hôm nay</div>
+          <div id="rev-today-amount" class="revenue-amount">0đ</div>
+          <div id="rev-today-count" class="revenue-sub">0 đơn</div>
+        </div>
+        <div class="revenue-card month">
+          <div id="rev-month-label" class="revenue-label">Doanh thu tháng</div>
+          <div id="rev-month-amount" class="revenue-amount">0đ</div>
+          <div id="rev-month-count" class="revenue-sub">0 đơn</div>
+          <select id="month-selector" class="month-select" aria-label="Chọn tháng xem doanh thu"></select>
+        </div>
+      </div>
     </div>
-  </div>
-  <div id="new-orders-grid" class="grid"></div>
 
-  <div class="section-title" style="margin-top: 28px;">
-    <div class="section-left">
-      <span>⚪ ĐÃ XONG (HÔM NAY)</span>
-      <span id="done-count" class="count-pill">0</span>
+    <div class="section-title">
+      <div class="section-left">
+        <span>🟢 ĐƠN MỚI (HÔM NAY)</span>
+        <span id="new-count" class="count-pill active">0</span>
+      </div>
     </div>
-  </div>
-  <div id="done-orders-grid" class="grid"></div>
+    <div id="new-orders-grid" class="grid"></div>
 
-  <div class="section-title" style="margin-top: 34px;">
-    <div class="section-left">
-      <span>📁 THƯ MỤC ĐƠN THEO NGÀY</span>
-      <span id="archive-days-count" class="count-pill">0 ngày</span>
+    <div class="section-title" style="margin-top: 28px;">
+      <div class="section-left">
+        <span>⚪ ĐÃ XONG (HÔM NAY)</span>
+        <span id="done-count" class="count-pill">0</span>
+      </div>
     </div>
-    <button type="button" id="btn-add-folder" class="btn-add-folder">➕ Tạo thư mục ngày</button>
+    <div id="done-orders-grid" class="grid"></div>
+
+    <div class="section-title" style="margin-top: 34px;">
+      <div class="section-left">
+        <span>📁 THƯ MỤC ĐƠN THEO NGÀY</span>
+        <span id="archive-days-count" class="count-pill">0 ngày</span>
+      </div>
+      <button type="button" id="btn-add-folder" class="btn-add-folder">➕ Tạo thư mục ngày</button>
+    </div>
+    <div id="archive-days-container"></div>
   </div>
-  <div id="archive-days-container"></div>
 
   <script>
     (function () {
+      const LOGIN_USER = "abcd";
+      const LOGIN_PASS = "9999";
+      const SESSION_AUTH_KEY = "kitchen_auth_session_v1";
+
       const REVENUE_PIN = "9999";
       const NEW_ORDER_PHRASE = "Có đơn mới, có đơn mới";
       const errorBox = document.getElementById("error-box");
+      const loginScreen = document.getElementById("login-screen");
+      const appShell = document.getElementById("app-shell");
+      const loginForm = document.getElementById("login-form");
+      const loginUserInput = document.getElementById("login-username");
+      const loginPassInput = document.getElementById("login-password");
+      const loginError = document.getElementById("login-error");
+
+      let soundEnabled = false;
+      let alertLoopTimer = null;
+
+      function stopAlertLoop() {
+        if (alertLoopTimer) {
+          clearInterval(alertLoopTimer);
+          alertLoopTimer = null;
+        }
+        try {
+          if ("speechSynthesis" in window) {
+            window.speechSynthesis.cancel();
+          }
+        } catch (_) {}
+        const muteBtn = document.getElementById("btn-mute-alert");
+        if (muteBtn) muteBtn.classList.remove("ringing");
+      }
+
+      function applyAuthState(isLoggedIn) {
+        if (isLoggedIn) {
+          loginScreen.classList.add("hidden");
+          appShell.classList.add("unlocked");
+          syncAlertLoop();
+        } else {
+          stopAlertLoop();
+          appShell.classList.remove("unlocked");
+          loginScreen.classList.remove("hidden");
+        }
+      }
+
+      let isAuthenticated = false;
+      try {
+        isAuthenticated = sessionStorage.getItem(SESSION_AUTH_KEY) === "1";
+      } catch (_) {}
+      applyAuthState(isAuthenticated);
+
+      loginForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const u = loginUserInput.value.trim();
+        const p = loginPassInput.value.trim();
+        if (u === LOGIN_USER && p === LOGIN_PASS) {
+          try {
+            sessionStorage.setItem(SESSION_AUTH_KEY, "1");
+          } catch (_) {}
+          loginError.style.display = "none";
+          loginPassInput.value = "";
+          applyAuthState(true);
+        } else {
+          loginError.style.display = "block";
+          loginPassInput.focus();
+        }
+      });
+
+      document.getElementById("btn-logout").addEventListener("click", () => {
+        try {
+          sessionStorage.removeItem(SESSION_AUTH_KEY);
+        } catch (_) {}
+        loginUserInput.value = "";
+        loginPassInput.value = "";
+        loginError.style.display = "none";
+        applyAuthState(false);
+      });
 
       function showError(msg) {
         if (!errorBox) return;
@@ -174,8 +325,6 @@
         showError("Lỗi kết nối: " + reason);
       });
 
-      let soundEnabled = false;
-      let alertLoopTimer = null;
       let revenueUnlocked = false;
       let selectedMonthKey = null;
       let latestOrdersData = {};
@@ -259,7 +408,7 @@
       }
 
       function speakPhrase(phrase) {
-        if (!soundEnabled) return;
+        if (!soundEnabled || !appShell.classList.contains("unlocked")) return;
         playChime();
         try {
           if ("speechSynthesis" in window) {
@@ -308,7 +457,7 @@
         const totalAlerts = unacked.length + pendingCalls.length;
         const muteBtn = document.getElementById("btn-mute-alert");
 
-        if (totalAlerts > 0 && soundEnabled) {
+        if (totalAlerts > 0 && soundEnabled && appShell.classList.contains("unlocked")) {
           muteBtn.classList.add("ringing");
           muteBtn.textContent = `🔇 Đang kêu (${totalAlerts} thông báo) — Bấm dừng`;
           if (!alertLoopTimer) {
@@ -317,7 +466,7 @@
 
             alertLoopTimer = setInterval(() => {
               const phrase = getNextAlertPhrase();
-              if (!phrase || !soundEnabled) {
+              if (!phrase || !soundEnabled || !appShell.classList.contains("unlocked")) {
                 stopAlertLoop();
                 return;
               }
@@ -327,20 +476,6 @@
         } else {
           stopAlertLoop();
         }
-      }
-
-      function stopAlertLoop() {
-        if (alertLoopTimer) {
-          clearInterval(alertLoopTimer);
-          alertLoopTimer = null;
-        }
-        try {
-          if ("speechSynthesis" in window) {
-            window.speechSynthesis.cancel();
-          }
-        } catch (_) {}
-        const muteBtn = document.getElementById("btn-mute-alert");
-        if (muteBtn) muteBtn.classList.remove("ringing");
       }
 
       function renderStaffCalls(callsData) {
@@ -696,123 +831,10 @@
         setOrdersData(data, hasBrandNewOrder) {
           latestOrdersData = data || {};
           renderAll(latestOrdersData);
-          if (hasBrandNewOrder && soundEnabled) {
+          if (hasBrandNewOrder && soundEnabled && appShell.classList.contains("unlocked")) {
             speakPhrase(getNextAlertPhrase() || NEW_ORDER_PHRASE);
           }
         },
         setCallsData(calls, hasNewCall) {
           latestCallsData = calls || {};
           renderStaffCalls(latestCallsData);
-          syncAlertLoop();
-          if (hasNewCall && soundEnabled) {
-            const pending = getPendingStaffCalls(latestCallsData);
-            if (pending.length > 0) {
-              const tbl = pending[0].table || "";
-              speakPhrase(tbl ? `Bàn ${tbl} cần hỗ trợ` : "Có bàn cần hỗ trợ");
-            }
-          }
-        },
-        reportError(msg) {
-          showError(msg);
-        }
-      };
-
-      setInterval(() => {
-        renderAll(latestOrdersData);
-      }, 30000);
-    })();
-  </script>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBghiBbYsyo7F5AjWgcQqcCXyoVHi5nVz8",
-      authDomain: "mohinhquan.firebaseapp.com",
-      databaseURL: "https://mohinhquan-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "mohinhquan",
-      storageBucket: "mohinhquan.firebasestorage.app",
-      messagingSenderId: "557675172063",
-      appId: "1:557675172063:web:baf9433c28328878dbd96a"
-    };
-
-    try {
-      const app = initializeApp(firebaseConfig);
-      const db = getDatabase(app);
-
-      let isFirstOrdersLoad = true;
-      let isFirstCallsLoad = true;
-      const knownOrderIds = new Set();
-      const knownCallIds = new Set();
-
-      window.__firebaseUpdateOrder = function (orderId, payload) {
-        return update(ref(db, `orders/${orderId}`), payload);
-      };
-
-      window.__firebaseDeleteOrders = function (ids) {
-        return Promise.all(ids.map(id => remove(ref(db, `orders/${id}`))));
-      };
-
-      window.__firebaseResolveCall = function (callId) {
-        return update(ref(db, `staffCalls/${callId}`), {
-          status: "resolved",
-          resolvedAt: Date.now()
-        });
-      };
-
-      onValue(ref(db, "orders"), (snapshot) => {
-        const data = snapshot.val() || {};
-        const list = Object.entries(data).map(([id, val]) => ({ id, ...(val || {}) }));
-
-        let hasBrandNewOrder = false;
-        for (const o of list) {
-          if (!knownOrderIds.has(o.id)) {
-            knownOrderIds.add(o.id);
-            if (!isFirstOrdersLoad && (!o.status || o.status === "new")) {
-              hasBrandNewOrder = true;
-            }
-          }
-        }
-        isFirstOrdersLoad = false;
-
-        if (window.__kitchenBridge) {
-          window.__kitchenBridge.setOrdersData(data, hasBrandNewOrder);
-        }
-      }, (err) => {
-        if (window.__kitchenBridge) {
-          window.__kitchenBridge.reportError("Lỗi đọc dữ liệu đơn hàng: " + err.message);
-        }
-      });
-
-      onValue(ref(db, "staffCalls"), (snapshot) => {
-        const calls = snapshot.val() || {};
-        const callList = Object.entries(calls).map(([id, val]) => ({ id, ...(val || {}) }));
-
-        let hasNewCall = false;
-        for (const c of callList) {
-          if (!knownCallIds.has(c.id)) {
-            knownCallIds.add(c.id);
-            if (!isFirstCallsLoad && c.status !== "resolved") {
-              hasNewCall = true;
-            }
-          }
-        }
-        isFirstCallsLoad = false;
-
-        if (window.__kitchenBridge) {
-          window.__kitchenBridge.setCallsData(calls, hasNewCall);
-        }
-      }, (err) => {
-        if (window.__kitchenBridge) {
-          window.__kitchenBridge.reportError("Lỗi đọc dữ liệu gọi nhân viên: " + err.message);
-        }
-      });
-    } catch (err) {
-      if (window.__kitchenBridge) {
-        window.__kitchenBridge.reportError("Lỗi khởi tạo Firebase: " + (err && err.message ? err.message : String(err)));
-      }
-    }
-  </script>
-</body>
-</html>
