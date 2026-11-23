@@ -10,6 +10,10 @@
     .top-actions { display: flex; gap: 8px; flex-wrap: wrap; }
     .sound-btn { padding: 10px 14px; border: none; border-radius: 8px; background: #38bdf8; color: #082f49; font-weight: bold; cursor: pointer; }
     .sound-btn:hover { background: #0ea5e9; }
+    .mute-btn { padding: 10px 14px; border: none; border-radius: 8px; background: #f97316; color: #fff; font-weight: bold; cursor: pointer; display: none; }
+    .mute-btn.ringing { display: inline-block; animation: pulseBtn 1s infinite; }
+    @keyframes pulseBtn { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+
     .revenue-btn { padding: 10px 14px; border: none; border-radius: 8px; background: #facc15; color: #422006; font-weight: bold; cursor: pointer; }
     .revenue-btn:hover { background: #eab308; }
     .lock-btn { padding: 7px 12px; border: 1px solid #475569; border-radius: 6px; background: #1e293b; color: #e2e8f0; font-weight: bold; cursor: pointer; font-size: 13px; }
@@ -38,17 +42,21 @@
 
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; }
     .order-card { background: #1e293b; border-left: 5px solid #22c55e; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; }
+    .order-card.unacked { border: 2px solid #facc15; border-left: 6px solid #facc15; box-shadow: 0 0 16px rgba(250, 204, 21, 0.25); }
     .order-card.done { border-left-color: #64748b; opacity: 0.78; background: #162032; }
 
     .badge { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; background: #22c55e; color: #052e16; }
+    .badge.unacked-badge { background: #facc15; color: #422006; margin-left: 4px; }
     .done .badge { background: #64748b; color: #fff; }
 
     .mode-tag { display: inline-block; margin-left: 6px; padding: 2px 7px; border-radius: 5px; font-size: 11px; font-weight: bold; background: #334155; color: #e2e8f0; vertical-align: middle; }
     .item-note { color: #7dd3fc; font-size: 12px; margin-top: 2px; }
     .order-note { color: #fde047; font-size: 13px; margin-bottom: 8px; padding: 6px 8px; background: rgba(253, 224, 71, 0.08); border-radius: 6px; }
 
-    .actions { margin-top: 12px; display: flex; gap: 8px; }
-    .actions button { flex: 1; padding: 9px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; }
+    .actions { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
+    .actions button { flex: 1; min-width: 120px; padding: 9px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; }
+    .btn-ack { background: #facc15; color: #422006; }
+    .btn-ack:hover { background: #eab308; }
     .btn-done { background: #22c55e; color: #052e16; }
     .btn-done:hover { background: #16a34a; }
     .btn-undo { background: #334155; color: #cbd5e1; }
@@ -79,6 +87,7 @@
       <div id="today-label" style="font-size:13px; color:#94a3b8; margin-top:4px;"></div>
     </div>
     <div class="top-actions">
+      <button type="button" id="btn-mute-alert" class="mute-btn">🔇 Đang kêu... (Bấm dừng)</button>
       <button type="button" id="btn-revenue" class="revenue-btn">💰 Doanh thu</button>
       <button type="button" id="btn-sound" class="sound-btn">🔔 Bật chuông báo đơn</button>
     </div>
@@ -133,6 +142,7 @@
   <script>
     (function () {
       const REVENUE_PIN = "9999";
+      const ALERT_PHRASE = "Có đơn mới, có đơn mới";
       const errorBox = document.getElementById("error-box");
 
       function showError(msg) {
@@ -151,11 +161,24 @@
       });
 
       let soundEnabled = false;
+      let alertLoopTimer = null;
       let revenueUnlocked = false;
       let selectedMonthKey = null;
       let latestOrdersData = {};
       const expandedDays = new Set();
       const customFolders = new Set();
+
+      // Lưu trạng thái đã bấm "Xác nhận đơn mới" theo từng orderId (kèm localStorage để không bị kêu lại khi reload)
+      const STORAGE_ACK_KEY = "kitchen_acked_orders_v1";
+      const acknowledgedOrderIds = new Set(
+        JSON.parse(localStorage.getItem(STORAGE_ACK_KEY) || "[]")
+      );
+
+      function saveAckIds() {
+        try {
+          localStorage.setItem(STORAGE_ACK_KEY, JSON.stringify(Array.from(acknowledgedOrderIds)));
+        } catch (_) {}
+      }
 
       function getDateKeyByOffset(offsetDays = 0) {
         const d = new Date();
@@ -205,21 +228,81 @@
           .replace(/"/g, "&quot;");
       }
 
-      function playBeep() {
-        if (!soundEnabled) return;
+      function playChime() {
         try {
           const AudioCtx = window.AudioContext || window.webkitAudioContext;
           const ctx = new AudioCtx();
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
-          osc.type = "sine";
-          osc.frequency.setValueAtTime(880, ctx.currentTime);
-          gain.gain.setValueAtTime(0.2, ctx.currentTime);
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(920, ctx.currentTime);
+          gain.gain.setValueAtTime(0.18, ctx.currentTime);
           osc.connect(gain);
           gain.connect(ctx.destination);
           osc.start();
-          osc.stop(ctx.currentTime + 0.25);
+          osc.stop(ctx.currentTime + 0.22);
         } catch (_) {}
+      }
+
+      function speakNewOrderAlert() {
+        if (!soundEnabled) return;
+        playChime();
+        try {
+          if ("speechSynthesis" in window) {
+            window.speechSynthesis.cancel();
+            const utter = new SpeechSynthesisUtterance(ALERT_PHRASE);
+            utter.lang = "vi-VN";
+            utter.rate = 1.05;
+            utter.pitch = 1.05;
+            const voices = window.speechSynthesis.getVoices();
+            const viVoice = voices.find(v => /vi/i.test(v.lang));
+            if (viVoice) utter.voice = viVoice;
+            window.speechSynthesis.speak(utter);
+          }
+        } catch (_) {}
+      }
+
+      function getUnacknowledgedNewOrders(data) {
+        return Object.entries(data || {})
+          .map(([id, val]) => ({ id, ...(val || {}) }))
+          .filter(o => o.status !== "done" && !acknowledgedOrderIds.has(o.id));
+      }
+
+      function syncAlertLoop() {
+        const unacked = getUnacknowledgedNewOrders(latestOrdersData);
+        const muteBtn = document.getElementById("btn-mute-alert");
+
+        if (unacked.length > 0 && soundEnabled) {
+          muteBtn.classList.add("ringing");
+          muteBtn.textContent = `🔇 Đang kêu (${unacked.length} đơn chưa xác nhận) — Bấm dừng`;
+          if (!alertLoopTimer) {
+            speakNewOrderAlert();
+            alertLoopTimer = setInterval(() => {
+              const currentUnacked = getUnacknowledgedNewOrders(latestOrdersData);
+              if (currentUnacked.length === 0 || !soundEnabled) {
+                stopAlertLoop();
+                return;
+              }
+              speakNewOrderAlert();
+            }, 4200);
+          }
+        } else {
+          stopAlertLoop();
+        }
+      }
+
+      function stopAlertLoop() {
+        if (alertLoopTimer) {
+          clearInterval(alertLoopTimer);
+          alertLoopTimer = null;
+        }
+        try {
+          if ("speechSynthesis" in window) {
+            window.speechSynthesis.cancel();
+          }
+        } catch (_) {}
+        const muteBtn = document.getElementById("btn-mute-alert");
+        if (muteBtn) muteBtn.classList.remove("ringing");
       }
 
       function renderRevenue(list) {
@@ -259,6 +342,7 @@
 
       function renderOrderCard(o) {
         const isDone = o.status === "done";
+        const isUnackedNew = !isDone && !acknowledgedOrderIds.has(o.id);
         const tableText = escapeHtml(o.table || "Mang về");
         const modeText = o.orderType ? `<span class="mode-tag">${escapeHtml(o.orderType)}</span>` : "";
         const timeText = o.createdAt
@@ -273,14 +357,17 @@
         `).join("");
 
         return `
-          <div class="order-card ${isDone ? "done" : "new"}">
+          <div class="order-card ${isDone ? "done" : "new"} ${isUnackedNew ? "unacked" : ""}">
             <div>
-              <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;">
                 <div>
                   <strong style="font-size:18px;">Bàn: ${tableText}</strong>
                   ${modeText}
                 </div>
-                <span class="badge">${isDone ? "ĐÃ XONG" : "ĐƠN MỚI"}</span>
+                <div>
+                  <span class="badge">${isDone ? "ĐÃ XONG" : "ĐƠN MỚI"}</span>
+                  ${isUnackedNew ? `<span class="badge unacked-badge">CHƯA XÁC NHẬN</span>` : ""}
+                </div>
               </div>
               ${timeText ? `<div style="font-size:12px; color:#94a3b8; margin-top:4px;">Lúc ${timeText}</div>` : ""}
               <ul style="padding-left:18px; margin:10px 0;">
@@ -294,7 +381,13 @@
               <div class="actions">
                 ${isDone
                   ? `<button type="button" class="btn-undo" data-action="status" data-id="${escapeHtml(o.id)}" data-status="new">↩ Khôi phục lại đơn mới</button>`
-                  : `<button type="button" class="btn-done" data-action="status" data-id="${escapeHtml(o.id)}" data-status="done">✔ Hoàn tất</button>`
+                  : `
+                    ${isUnackedNew
+                      ? `<button type="button" class="btn-ack" data-action="ack" data-id="${escapeHtml(o.id)}">🔔 Xác nhận đơn mới</button>`
+                      : ""
+                    }
+                    <button type="button" class="btn-done" data-action="status" data-id="${escapeHtml(o.id)}" data-status="done">✔ Hoàn tất</button>
+                  `
                 }
               </div>
             </div>
@@ -376,6 +469,8 @@
             </div>
           `;
         }).join("");
+
+        syncAlertLoop();
       }
 
       customFolders.add(getDateKeyByOffset(-1));
@@ -411,8 +506,14 @@
 
       document.getElementById("btn-sound").addEventListener("click", () => {
         soundEnabled = true;
-        playBeep();
-        alert("Đã bật chuông báo khi có đơn mới!");
+        speakNewOrderAlert();
+        syncAlertLoop();
+        alert("Đã bật chuông báo! Khi có đơn mới sẽ kêu 'Có đơn mới, có đơn mới' cho đến khi bấm Xác nhận đơn mới.");
+      });
+
+      document.getElementById("btn-mute-alert").addEventListener("click", () => {
+        stopAlertLoop();
+        document.getElementById("btn-mute-alert").classList.remove("ringing");
       });
 
       document.getElementById("btn-add-folder").addEventListener("click", () => {
@@ -437,6 +538,15 @@
         if (!target) return;
 
         const action = target.getAttribute("data-action");
+
+        if (action === "ack") {
+          const orderId = target.getAttribute("data-id");
+          if (!orderId) return;
+          acknowledgedOrderIds.add(orderId);
+          saveAckIds();
+          renderAll(latestOrdersData);
+          return;
+        }
 
         if (action === "toggle-day") {
           const dateKey = target.getAttribute("data-date");
@@ -473,6 +583,8 @@
           if (typeof window.__firebaseDeleteOrders === "function") {
             await window.__firebaseDeleteOrders(targetIds);
           }
+          for (const id of targetIds) acknowledgedOrderIds.delete(id);
+          saveAckIds();
           customFolders.delete(dateKey);
           expandedDays.delete(dateKey);
           renderAll(latestOrdersData);
@@ -483,6 +595,13 @@
           const orderId = target.getAttribute("data-id");
           const status = target.getAttribute("data-status");
           if (!orderId || !status) return;
+          if (status === "done") {
+            acknowledgedOrderIds.add(orderId);
+            saveAckIds();
+          } else if (status === "new") {
+            acknowledgedOrderIds.delete(orderId);
+            saveAckIds();
+          }
           const payload = { status };
           if (status === "done") payload.completedAt = Date.now();
           if (typeof window.__firebaseUpdateOrder === "function") {
@@ -492,10 +611,12 @@
       });
 
       window.__kitchenBridge = {
-        setOrdersData(data, shouldBeep) {
+        setOrdersData(data, hasBrandNewOrder) {
           latestOrdersData = data || {};
-          if (shouldBeep) playBeep();
           renderAll(latestOrdersData);
+          if (hasBrandNewOrder && soundEnabled) {
+            speakNewOrderAlert();
+          }
         },
         reportError(msg) {
           showError(msg);
@@ -541,19 +662,19 @@
         const data = snapshot.val() || {};
         const list = Object.entries(data).map(([id, val]) => ({ id, ...(val || {}) }));
 
-        let hasNewOrder = false;
+        let hasBrandNewOrder = false;
         for (const o of list) {
           if (!knownIds.has(o.id)) {
             knownIds.add(o.id);
             if (!isFirstLoad && (!o.status || o.status === "new")) {
-              hasNewOrder = true;
+              hasBrandNewOrder = true;
             }
           }
         }
         isFirstLoad = false;
 
         if (window.__kitchenBridge) {
-          window.__kitchenBridge.setOrdersData(data, hasNewOrder);
+          window.__kitchenBridge.setOrdersData(data, hasBrandNewOrder);
         }
       }, (err) => {
         if (window.__kitchenBridge) {
