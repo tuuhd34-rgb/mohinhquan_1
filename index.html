@@ -1,4 +1,4 @@
-<!-- design by Mr.Le - contact: 0333667431 -->
+design by Mr.Le-contact: 0333667431
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -19,29 +19,12 @@
 
     * { box-sizing: border-box; }
 
-    html, body {
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
       margin: 0;
-      padding: 0;
-      min-height: 100%;
+      padding: 14px 14px 255px;
       background: var(--bg);
       color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-    }
-
-    body {
-      padding: 14px 14px 255px;
-    }
-
-    #page-error-banner {
-      display: none;
-      background: #fee2e2;
-      border: 1px solid #ef4444;
-      color: #991b1b;
-      padding: 10px 12px;
-      border-radius: 10px;
-      margin-bottom: 12px;
-      font-size: 13px;
-      font-weight: 600;
     }
 
     .header {
@@ -532,14 +515,6 @@
       font-size: 14px;
     }
 
-    .designer-credit {
-      text-align: center;
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 14px;
-      padding-bottom: 8px;
-    }
-
     .bottom-panel {
       position: fixed;
       bottom: 0;
@@ -647,4 +622,80 @@
       background: #111827;
       color: #fff;
       padding: 12px 14px;
-      border-radius: 12
+      border-radius: 12px;
+      gap: 10px;
+    }
+
+    .cart-summary {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .send-btn {
+      background: var(--accent);
+      color: var(--accent-text);
+      font-weight: 800;
+      font-size: 15px;
+      padding: 11px 18px;
+      border: none;
+      border-radius: 9px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .send-btn:disabled,
+    .support-send-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="header-sub">Menu gọi món tại quầy</div>
+      <h2 id="table-title" class="header-title">XIN CHÀO QUÝ KHÁCH</h2>
+    </div>
+    <div class="header-actions">
+      <button type="button" id="btn-toggle-settings" class="settings-toggle-btn" onclick="toggleSettingsPanel()">⚙️ Thiết lập menu</button>
+      <button type="button" class="support-btn" onclick="toggleSupportPanel()">🙋 Gọi nhân viên hỗ trợ</button>
+    </div>
+  </div>
+
+  <div id="settings-panel" class="settings-panel">
+    <div class="settings-header">
+      <div class="settings-title">⚙️ THIẾT LẬP MÓN, GIÁ &amp; HÌNH ẢNH (3 MỤC)</div>
+      <div class="settings-sub-actions">
+        <button type="button" class="btn-sync-fb" onclick="syncMenuToFirebase()">☁️ Lưu đồng bộ Firebase</button>
+        <button type="button" class="btn-reset-menu" onclick="resetDefaultMenu()">↺ Khôi phục mặc định</button>
+      </div>
+    </div>
+
+    <div class="add-dish-box">
+      <div class="add-dish-grid">
+        <div>
+          <label for="new-dish-cat" class="field-label">Danh mục (3 mục)</label>
+          <select id="new-dish-cat" class="field-select">
+            <option value="Đồ uống">Đồ uống</option>
+            <option value="Đồ ăn">Đồ ăn</option>
+            <option value="Mì cay">Mì cay</option>
+          </select>
+        </div>
+        <div>
+          <label for="new-dish-name" class="field-label">Tên món mới</label>
+          <input id="new-dish-name" type="text" class="field-input" placeholder="VD: Trà sữa thái xanh" />
+        </div>
+        <div>
+          <label for="new-dish-price" class="field-label">Giá bán (VNĐ)</label>
+          <input id="new-dish-price" type="number" min="0" step="1000" class="field-input" placeholder="VD: 29000" />
+        </div>
+      </div>
+
+      <div class="img-import-row">
+        <img id="new-dish-preview" src="" alt="Xem trước ảnh" class="img-preview-box" />
+        <div style="flex:1; min-width:210px;">
+          <label for="new-dish-url" class="field-label">Import link ảnh từ ngoài (URL)</label>
+          <input id="new-dish-url" type="text" class="field-input" placeholder="Dán link ảnh https://... hoặc chọn file bên cạnh" oninput="onNewDishUrlInput()" />
+        </div>
+        <div>
+          <label for="new-dish-file"
