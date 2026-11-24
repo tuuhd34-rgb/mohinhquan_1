@@ -145,13 +145,18 @@
     #revenue-section { display: none; background: #131c31; border: 1px solid #ca8a04; border-radius: 12px; padding: 16px; margin-bottom: 20px; }
     #revenue-section.unlocked { display: block; }
     .revenue-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
-    .revenue-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
-    .revenue-card { background: #1e293b; border-radius: 10px; padding: 14px; border-left: 4px solid #facc15; }
+    .revenue-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+    .revenue-card { background: #1e293b; border-radius: 10px; padding: 14px; border-left: 4px solid #facc15; display: flex; flex-direction: column; justify-content: space-between; }
     .revenue-card.month { border-left-color: #38bdf8; }
     .revenue-label { font-size: 13px; color: #94a3b8; margin-bottom: 6px; }
     .revenue-amount { font-size: 22px; font-weight: bold; color: #f8fafc; }
     .revenue-sub { font-size: 12px; color: #cbd5e1; margin-top: 4px; }
-    .month-select { background: #0f172a; color: #f8fafc; border: 1px solid #475569; border-radius: 6px; padding: 5px 8px; font-size: 13px; margin-top: 8px; }
+    .rev-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+    .month-select { background: #0f172a; color: #f8fafc; border: 1px solid #475569; border-radius: 6px; padding: 6px 8px; font-size: 13px; }
+    .btn-rev-del { padding: 6px 10px; border: none; border-radius: 6px; background: #dc2626; color: #fff; font-size: 12px; font-weight: bold; cursor: pointer; }
+    .btn-rev-del:hover { background: #b91c1c; }
+    .btn-rev-del-all { padding: 6px 10px; border: 1px solid #ef4444; border-radius: 6px; background: rgba(239, 68, 68, 0.15); color: #fca5a5; font-size: 12px; font-weight: bold; cursor: pointer; }
+    .btn-rev-del-all:hover { background: #b91c1c; color: #fff; }
 
     .section-title { font-size: 16px; font-weight: bold; margin: 20px 0 12px 0; padding-bottom: 8px; border-bottom: 1px solid #334155; display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
     .section-left { display: flex; align-items: center; gap: 8px; }
@@ -275,15 +280,28 @@
       </div>
       <div class="revenue-grid">
         <div class="revenue-card">
-          <div id="rev-today-label" class="revenue-label">Doanh thu hôm nay</div>
-          <div id="rev-today-amount" class="revenue-amount">0đ</div>
-          <div id="rev-today-count" class="revenue-sub">0 đơn</div>
+          <div>
+            <div id="rev-day-label" class="revenue-label">Doanh thu theo ngày</div>
+            <div id="rev-day-amount" class="revenue-amount">0đ</div>
+            <div id="rev-day-count" class="revenue-sub">0 đơn</div>
+          </div>
+          <div class="rev-controls">
+            <select id="day-selector" class="month-select" aria-label="Chọn ngày xem hoặc xóa doanh thu"></select>
+            <button type="button" id="btn-del-selected-day" class="btn-rev-del">🗑 Xóa ngày này</button>
+            <button type="button" id="btn-del-all-days" class="btn-rev-del-all">🗑 Xóa hết ngày</button>
+          </div>
         </div>
         <div class="revenue-card month">
-          <div id="rev-month-label" class="revenue-label">Doanh thu tháng</div>
-          <div id="rev-month-amount" class="revenue-amount">0đ</div>
-          <div id="rev-month-count" class="revenue-sub">0 đơn</div>
-          <select id="month-selector" class="month-select" aria-label="Chọn tháng xem doanh thu"></select>
+          <div>
+            <div id="rev-month-label" class="revenue-label">Doanh thu tháng</div>
+            <div id="rev-month-amount" class="revenue-amount">0đ</div>
+            <div id="rev-month-count" class="revenue-sub">0 đơn</div>
+          </div>
+          <div class="rev-controls">
+            <select id="month-selector" class="month-select" aria-label="Chọn tháng xem hoặc xóa doanh thu"></select>
+            <button type="button" id="btn-del-selected-month" class="btn-rev-del">🗑 Xóa tháng này</button>
+            <button type="button" id="btn-del-all-months" class="btn-rev-del-all">🗑 Xóa hết tháng</button>
+          </div>
         </div>
       </div>
     </div>
@@ -388,6 +406,7 @@
       let soundEnabled = false;
       let alertLoopTimer = null;
       let revenueUnlocked = false;
+      let selectedDayKey = null;
       let selectedMonthKey = null;
       let latestOrdersMap = new Map();
       let latestCallsMap = new Map();
@@ -726,35 +745,62 @@
         syncAlertLoop();
       }
 
+      async function deleteOrdersByIds(targetIds) {
+        const uniqueIds = Array.from(new Set((targetIds || []).filter(Boolean)));
+        if (!uniqueIds.length) return;
+        if (typeof window.__firebaseDeleteOrders === "function") {
+          await window.__firebaseDeleteOrders(uniqueIds);
+        }
+        for (const id of uniqueIds) {
+          acknowledgedOrderIds.delete(id);
+          latestOrdersMap.delete(id);
+        }
+        saveSet(STORAGE_ACK_KEY, acknowledgedOrderIds);
+        renderAll();
+      }
+
       function renderRevenue(list) {
         const now = Date.now();
         const todayKey = getDateKey(now);
         const currentMonthKey = getMonthKey(now);
 
+        const daySet = new Set([todayKey]);
         const monthSet = new Set([currentMonthKey]);
         for (const o of list) {
-          monthSet.add(getMonthKey((o.createdAt || o.completedAt) || now));
+          const ts = (o.createdAt || o.completedAt) || now;
+          daySet.add(getDateKey(ts));
+          monthSet.add(getMonthKey(ts));
         }
+
+        const sortedDays = Array.from(daySet).sort((a, b) => b.localeCompare(a));
         const sortedMonths = Array.from(monthSet).sort((a, b) => b.localeCompare(a));
 
+        if (!selectedDayKey || !daySet.has(selectedDayKey)) {
+          selectedDayKey = todayKey;
+        }
         if (!selectedMonthKey || !monthSet.has(selectedMonthKey)) {
           selectedMonthKey = currentMonthKey;
         }
 
-        const selectEl = document.getElementById("month-selector");
-        selectEl.innerHTML = sortedMonths
+        const daySelectEl = document.getElementById("day-selector");
+        daySelectEl.innerHTML = sortedDays
+          .map(dk => `<option value="${escapeHtml(dk)}" ${dk === selectedDayKey ? "selected" : ""}>${dk === todayKey ? `Hôm nay (${escapeHtml(formatDateVN(dk))})` : escapeHtml(formatDateVN(dk))}</option>`)
+          .join("");
+
+        const monthSelectEl = document.getElementById("month-selector");
+        monthSelectEl.innerHTML = sortedMonths
           .map(mk => `<option value="${escapeHtml(mk)}" ${mk === selectedMonthKey ? "selected" : ""}>${escapeHtml(formatMonthVN(mk))}</option>`)
           .join("");
 
-        const todayOrders = list.filter(o => getDateKey((o.createdAt || o.completedAt) || now) === todayKey);
+        const dayOrders = list.filter(o => getDateKey((o.createdAt || o.completedAt) || now) === selectedDayKey);
         const monthOrders = list.filter(o => getMonthKey((o.createdAt || o.completedAt) || now) === selectedMonthKey);
 
-        const todayTotal = todayOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+        const dayTotal = dayOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
         const monthTotal = monthOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
 
-        document.getElementById("rev-today-label").textContent = `Doanh thu hôm nay (${formatDateVN(todayKey)})`;
-        document.getElementById("rev-today-amount").textContent = `${todayTotal.toLocaleString("vi-VN")}đ`;
-        document.getElementById("rev-today-count").textContent = `${todayOrders.length} đơn`;
+        document.getElementById("rev-day-label").textContent = `Doanh thu ngày (${formatDateVN(selectedDayKey)})`;
+        document.getElementById("rev-day-amount").textContent = `${dayTotal.toLocaleString("vi-VN")}đ`;
+        document.getElementById("rev-day-count").textContent = `${dayOrders.length} đơn`;
 
         document.getElementById("rev-month-label").textContent = `Doanh thu ${formatMonthVN(selectedMonthKey)}`;
         document.getElementById("rev-month-amount").textContent = `${monthTotal.toLocaleString("vi-VN")}đ`;
@@ -899,9 +945,74 @@
       renderAll();
       renderStaffCalls();
 
+      document.getElementById("day-selector").addEventListener("change", (e) => {
+        selectedDayKey = e.target.value;
+        renderAll();
+      });
+
       document.getElementById("month-selector").addEventListener("change", (e) => {
         selectedMonthKey = e.target.value;
         renderAll();
+      });
+
+      document.getElementById("btn-del-selected-day").addEventListener("click", async () => {
+        if (!unlocked || !selectedDayKey) return;
+        const targetIds = Array.from(latestOrdersMap.values())
+          .filter(o => getDateKey((o.createdAt || o.completedAt) || Date.now()) === selectedDayKey)
+          .map(o => o.id);
+        const label = formatDateVN(selectedDayKey);
+        if (!targetIds.length) {
+          alert(`Không có đơn nào để xóa trong ngày ${label}.`);
+          return;
+        }
+        const ok = confirm(`Xóa toàn bộ ${targetIds.length} đơn của ngày ${label}?`);
+        if (!ok) return;
+        customFolders.delete(selectedDayKey);
+        expandedDays.delete(selectedDayKey);
+        await deleteOrdersByIds(targetIds);
+      });
+
+      document.getElementById("btn-del-all-days").addEventListener("click", async () => {
+        if (!unlocked) return;
+        const allIds = Array.from(latestOrdersMap.keys());
+        if (!allIds.length) {
+          alert("Hiện không có đơn nào để xóa.");
+          return;
+        }
+        const ok = confirm(`Xóa HẾT toàn bộ ${allIds.length} đơn của tất cả các ngày?`);
+        if (!ok) return;
+        customFolders.clear();
+        expandedDays.clear();
+        await deleteOrdersByIds(allIds);
+      });
+
+      document.getElementById("btn-del-selected-month").addEventListener("click", async () => {
+        if (!unlocked || !selectedMonthKey) return;
+        const targetIds = Array.from(latestOrdersMap.values())
+          .filter(o => getMonthKey((o.createdAt || o.completedAt) || Date.now()) === selectedMonthKey)
+          .map(o => o.id);
+        const label = formatMonthVN(selectedMonthKey);
+        if (!targetIds.length) {
+          alert(`Không có đơn nào để xóa trong ${label}.`);
+          return;
+        }
+        const ok = confirm(`Xóa toàn bộ ${targetIds.length} đơn của ${label}?`);
+        if (!ok) return;
+        await deleteOrdersByIds(targetIds);
+      });
+
+      document.getElementById("btn-del-all-months").addEventListener("click", async () => {
+        if (!unlocked) return;
+        const allIds = Array.from(latestOrdersMap.keys());
+        if (!allIds.length) {
+          alert("Hiện không có đơn nào để xóa.");
+          return;
+        }
+        const ok = confirm(`Xóa HẾT toàn bộ ${allIds.length} đơn của tất cả các tháng?`);
+        if (!ok) return;
+        customFolders.clear();
+        expandedDays.clear();
+        await deleteOrdersByIds(allIds);
       });
 
       document.getElementById("btn-revenue").addEventListener("click", () => {
@@ -1030,17 +1141,9 @@
           const ok = confirm(`Xóa toàn bộ ${targetIds.length} đơn của ngày ${label}?`);
           if (!ok) return;
 
-          if (typeof window.__firebaseDeleteOrders === "function") {
-            await window.__firebaseDeleteOrders(targetIds);
-          }
-          for (const id of targetIds) {
-            acknowledgedOrderIds.delete(id);
-            latestOrdersMap.delete(id);
-          }
-          saveSet(STORAGE_ACK_KEY, acknowledgedOrderIds);
           customFolders.delete(dateKey);
           expandedDays.delete(dateKey);
-          renderAll();
+          await deleteOrdersByIds(targetIds);
           return;
         }
 
