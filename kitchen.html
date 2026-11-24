@@ -315,6 +315,9 @@
       const DEFAULT_USER = "abcd";
       const DEFAULT_PASS = "9999";
       const STORAGE_CREDS_KEY = "kitchen_login_creds_v1";
+      const STORAGE_ACK_KEY = "kitchen_acked_orders_v1";
+      const STORAGE_NOTIFIED_ORDERS_KEY = "kitchen_notified_orders_v1";
+      const STORAGE_NOTIFIED_CALLS_KEY = "kitchen_notified_calls_v1";
 
       const REVENUE_PIN = "9999";
       const NEW_ORDER_PHRASE = "Có đơn mới, có đơn mới";
@@ -335,6 +338,23 @@
       function saveCreds(creds) {
         try {
           localStorage.setItem(STORAGE_CREDS_KEY, JSON.stringify(creds));
+        } catch (_) {}
+      }
+
+      function loadSet(key) {
+        try {
+          const arr = JSON.parse(localStorage.getItem(key) || "[]");
+          return new Set(Array.isArray(arr) ? arr : []);
+        } catch (_) {
+          return new Set();
+        }
+      }
+
+      function saveSet(key, setObj) {
+        try {
+          // Giữ tối đa 500 ID gần nhất để tránh phình bộ nhớ
+          const arr = Array.from(setObj).slice(-500);
+          localStorage.setItem(key, JSON.stringify(arr));
         } catch (_) {}
       }
 
@@ -365,19 +385,14 @@
       let soundEnabled = false;
       let revenueUnlocked = false;
       let selectedMonthKey = null;
-      let latestOrdersData = {};
-      let latestCallsData = {};
+      let latestOrdersMap = new Map();
+      let latestCallsMap = new Map();
       const expandedDays = new Set();
       const customFolders = new Set();
 
-      const STORAGE_ACK_KEY = "kitchen_acked_orders_v1";
-      const acknowledgedOrderIds = new Set(
-        JSON.parse(localStorage.getItem(STORAGE_ACK_KEY) || "[]")
-      );
-
-      // Lưu các ID đã báo âm thanh để không báo lặp lại cho cùng 1 bản ghi
-      const notifiedOrderIds = new Set();
-      const notifiedCallIds = new Set();
+      const acknowledgedOrderIds = loadSet(STORAGE_ACK_KEY);
+      const notifiedOrderIds = loadSet(STORAGE_NOTIFIED_ORDERS_KEY);
+      const notifiedCallIds = loadSet(STORAGE_NOTIFIED_CALLS_KEY);
 
       function showLoginMsg(text, type) {
         loginMsg.className = "login-msg " + type;
@@ -393,233 +408,4 @@
         clearLoginMsg();
         const isChange = mode === "change";
         tabLogin.classList.toggle("active", !isChange);
-        tabChangePw.classList.toggle("active", isChange);
-        panelLogin.style.display = isChange ? "none" : "block";
-        panelChangePw.style.display = isChange ? "block" : "none";
-        if (isChange) {
-          cpwUserInput.value = creds.user;
-        }
-      }
-
-      tabLogin.addEventListener("click", () => setAuthTab("login"));
-      tabChangePw.addEventListener("click", () => setAuthTab("change"));
-
-      function showError(msg) {
-        if (!errorBox) return;
-        errorBox.style.display = "block";
-        errorBox.textContent = msg;
-      }
-
-      function stopSpeech() {
-        try {
-          if ("speechSynthesis" in window) {
-            window.speechSynthesis.cancel();
-          }
-        } catch (_) {}
-      }
-
-      function attemptLogin() {
-        const u = (loginUserInput.value || "").trim().toLowerCase();
-        const p = (loginPassInput.value || "").trim();
-        if (u === creds.user.toLowerCase() && p === creds.pass) {
-          unlocked = true;
-          clearLoginMsg();
-          loginGate.classList.add("hidden");
-          appContent.classList.remove("locked");
-          renderAll(latestOrdersData);
-          renderStaffCalls(latestCallsData);
-        } else {
-          showLoginMsg("Tài khoản hoặc mật khẩu không đúng!", "error");
-        }
-      }
-
-      function attemptChangePassword() {
-        const u = (cpwUserInput.value || "").trim();
-        const oldP = (cpwOldInput.value || "").trim();
-        const newP = (cpwNewInput.value || "").trim();
-        const confirmP = (cpwConfirmInput.value || "").trim();
-
-        if (!u) {
-          showLoginMsg("Vui lòng nhập tài khoản!", "error");
-          return;
-        }
-        if (u.toLowerCase() !== creds.user.toLowerCase() || oldP !== creds.pass) {
-          showLoginMsg("Tài khoản hoặc mật khẩu hiện tại không đúng!", "error");
-          return;
-        }
-        if (!newP) {
-          showLoginMsg("Vui lòng nhập mật khẩu mới!", "error");
-          return;
-        }
-        if (newP !== confirmP) {
-          showLoginMsg("Mật khẩu mới nhập lại không khớp!", "error");
-          return;
-        }
-
-        creds = { user: u, pass: newP };
-        saveCreds(creds);
-
-        cpwOldInput.value = "";
-        cpwNewInput.value = "";
-        cpwConfirmInput.value = "";
-        loginUserInput.value = u;
-        loginPassInput.value = "";
-
-        showLoginMsg("Đã đổi mật khẩu thành công! Hãy đăng nhập bằng mật khẩu mới.", "success");
-        setTimeout(() => {
-          setAuthTab("login");
-        }, 900);
-      }
-
-      loginSubmitBtn.addEventListener("click", attemptLogin);
-      loginUserInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") attemptLogin();
-      });
-      loginPassInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") attemptLogin();
-      });
-
-      cpwSubmitBtn.addEventListener("click", attemptChangePassword);
-      cpwConfirmInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") attemptChangePassword();
-      });
-
-      document.getElementById("btn-open-pw").addEventListener("click", () => {
-        stopSpeech();
-        appContent.classList.add("locked");
-        loginGate.classList.remove("hidden");
-        setAuthTab("change");
-      });
-
-      document.getElementById("btn-logout").addEventListener("click", () => {
-        unlocked = false;
-        stopSpeech();
-        loginUserInput.value = "";
-        loginPassInput.value = "";
-        setAuthTab("login");
-        appContent.classList.add("locked");
-        loginGate.classList.remove("hidden");
-      });
-
-      function saveAckIds() {
-        try {
-          localStorage.setItem(STORAGE_ACK_KEY, JSON.stringify(Array.from(acknowledgedOrderIds)));
-        } catch (_) {}
-      }
-
-      function getDateKeyByOffset(offsetDays = 0) {
-        const d = new Date();
-        d.setDate(d.getDate() + offsetDays);
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, "0");
-        const day = String(d.getDate()).padStart(2, "0");
-        return `${y}-${m}-${day}`; }  function getDateKey(ts) { const d = ts ? new Date(ts) : new Date(); if (Number.isNaN(d.getTime())) return getDateKeyByOffset(0); const y = d.getFullYear(); const m = String(d.getMonth() + 1).padStart(2, "0"); const day = String(d.getDate()).padStart(2, "0"); return `${y}-${m}-${day}`;
-      }
-
-      function getMonthKey(ts) {
-        const d = ts ? new Date(ts) : new Date();
-        if (Number.isNaN(d.getTime())) return getMonthKey(Date.now());
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, "0");
-        return `${y}-${m}`;
-      }
-
-      function formatDateVN(dateKey) {
-        const parts = String(dateKey || "").split("-");
-        if (parts.length !== 3) return dateKey;
-        const [y, m, d] = parts;
-        return `${d}/${m}/${y}`; }  function formatMonthVN(monthKey) { const parts = String(monthKey \vert{}\vert{} "").split("-"); if (parts.length !== 2) return monthKey; const [y, m] = parts; return `Tháng ${m}/${y}`; }  function escapeHtml(str = "") { return String(str) .replace(/&/g, "&amp;") .replace(/</g, "&lt;") .replace(/>/g, "&gt;") .replace(/"/g, "&quot;"); }  function playChime() { try { const AudioCtx = window.AudioContext \vert{}\vert{} window.webkitAudioContext; const ctx = new AudioCtx(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.type = "triangle"; osc.frequency.setValueAtTime(920, ctx.currentTime); gain.gain.setValueAtTime(0.18, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22); osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.22); } catch (_) {} }  function speakPhrase(phrase) { if (!soundEnabled \vert{}\vert{} !unlocked) return; playChime(); try { if ("speechSynthesis" in window) { window.speechSynthesis.cancel(); const utter = new SpeechSynthesisUtterance(phrase); utter.lang = "vi-VN"; utter.rate = 1.05; utter.pitch = 1.05; const voices = window.speechSynthesis.getVoices(); const viVoice = voices.find(v => /vi/i.test(v.lang)); if (viVoice) utter.voice = viVoice; window.speechSynthesis.speak(utter); } } catch (_) {} }  function getPendingStaffCalls(callsData) { return Object.entries(callsData \vert{}\vert{} {}) .map(([id, val]) => ({ id, ...(val \vert{}\vert{} {}) })) .filter(c => c.status !== "resolved" && c.status !== "handled") .sort((a, b) => (b.createdAt \vert{}\vert{} 0) - (a.createdAt \vert{}\vert{} 0)); }  function renderStaffCalls(callsData) { const pendingCalls = getPendingStaffCalls(callsData); const box = document.getElementById("support-alerts-box"); const listEl = document.getElementById("support-alerts-list");  if (!pendingCalls.length) { box.classList.remove("has-calls"); listEl.innerHTML = ""; return; }  box.classList.add("has-calls"); listEl.innerHTML = pendingCalls.map(c => { const tbl = escapeHtml(c.table \vert{}\vert{} ""); const noteText = String(c.note \vert{}\vert{} "").trim(); const rawMsg = String(c.message \vert{}\vert{} "").trim(); const titleLabel = tbl ? `Bàn ${tbl} đang gọi hỗ trợ` : "Có bàn đang gọi hỗ trợ";
-          const detailText = rawMsg || (noteText ? `Bàn ${tbl} cần hỗ trợ: ${noteText}` : (tbl ? `Bàn ${tbl} cần hỗ trợ` : "Cần hỗ trợ"));
-          const timeText = c.createdAt
-            ? new Date(c.createdAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
-            : "";
-
-          return `
-            <div class="support-item">
-              <div>
-                <div class="support-text">🔔 ${escapeHtml(titleLabel)}</div>
-                <div class="support-note">Nội dung: ${escapeHtml(detailText)}</div>${timeText ? `<div class="support-time">Lúc ${timeText}</div>` : ""}
-              </div>
-              <button type="button" class="btn-resolve-call" data-action="resolve-call" data-id="${escapeHtml(c.id)}">
-                ✔ Đã hỗ trợ
-              </button>
-            </div>
-          `;
-        }).join("");
-      }
-
-      function renderRevenue(list) {
-        const now = Date.now();
-        const todayKey = getDateKey(now);
-        const currentMonthKey = getMonthKey(now);
-
-        const monthSet = new Set([currentMonthKey]);
-        for (const o of list) {
-          monthSet.add(getMonthKey((o.createdAt || o.completedAt) || now));
-        }
-        const sortedMonths = Array.from(monthSet).sort((a, b) => b.localeCompare(a));
-
-        if (!selectedMonthKey || !monthSet.has(selectedMonthKey)) {
-          selectedMonthKey = currentMonthKey;
-        }
-
-        const selectEl = document.getElementById("month-selector");
-        selectEl.innerHTML = sortedMonths
-          .map(mk => `<option value="${escapeHtml(mk)}" ${mk === selectedMonthKey ? "selected" : ""}>${escapeHtml(formatMonthVN(mk))}</option>`)
-          .join("");
-
-        const todayOrders = list.filter(o => getDateKey((o.createdAt || o.completedAt) || now) === todayKey);
-        const monthOrders = list.filter(o => getMonthKey((o.createdAt || o.completedAt) || now) === selectedMonthKey);
-
-        const todayTotal = todayOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
-        const monthTotal = monthOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
-
-        document.getElementById("rev-today-label").textContent = `Doanh thu hôm nay (${formatDateVN(todayKey)})`;
-        document.getElementById("rev-today-amount").textContent = `${todayTotal.toLocaleString("vi-VN")}đ`; document.getElementById("rev-today-count").textContent = `${todayOrders.length} đơn`;
-
-        document.getElementById("rev-month-label").textContent = `Doanh thu ${formatMonthVN(selectedMonthKey)}`;
-        document.getElementById("rev-month-amount").textContent = `${monthTotal.toLocaleString("vi-VN")}đ`; document.getElementById("rev-month-count").textContent = `${monthOrders.length} đơn`;
-      }
-
-      function renderOrderCard(o) {
-        const isDone = o.status === "done";
-        const isUnackedNew = !isDone && !acknowledgedOrderIds.has(o.id);
-        const tableText = escapeHtml(o.table || "Mang về");
-        const modeText = o.orderType ? `<span class="mode-tag">${escapeHtml(o.orderType)}</span>` : "";
-        const timeText = o.createdAt
-          ? new Date(o.createdAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
-          : "";
-
-        const itemsHtml = (o.items || []).map(i => `
-          <li style="margin-bottom:6px;">
-            <div><strong>${escapeHtml(i.qty)}x</strong> ${escapeHtml(i.name)}</div>${i.note ? `<div class="item-note">↳ Ghi chú món: ${escapeHtml(i.note)}</div>` : ""}
-          </li>
-        `).join("");
-
-        return `
-          <div class="order-card ${isDone ? "done" : "new"} ${isUnackedNew ? "unacked" : ""}">
-            <div>
-              <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;">
-                <div>
-                  <strong style="font-size:18px;">Bàn: ${tableText}</strong>${modeText}
-                </div>
-                <div>
-                  <span class="badge">${isDone ? "ĐÃ XONG" : "ĐƠN MỚI"}</span>
-                  ${isUnackedNew ? `<span class="badge unacked-badge">CHƯA XÁC NHẬN</span>` : ""}
-                </div>
-              </div>
-              ${timeText ? `<div style="font-size:12px; color:#94a3b8; margin-top:4px;">Lúc ${timeText}</div>` : ""}
-              <ul style="padding-left:18px; margin:10px 0;">
-                ${itemsHtml}
-              </ul>
-              ${o.note ? `<div class="order-note">Ghi chú đơn: ${escapeHtml(o.note)}</div>` : ""}
-            </div>
-
-            <div>
-              <div style="font-weight:bold;">Tổng: ${(Number(o.total) || 0).toLocaleString("vi-VN")}đ</div>
-              <div class="actions">
-                ${isDone
-                  ? `<button type="button" class="btn-undo" data-action="status" data-id="${escapeHtml(o.id)}" data-status="new">↩ Khôi phục lại đơn mới</button>`
-                  : `
-                    ${isUnackedNew
-                      ? `<button
+        tabChangePw.classList
