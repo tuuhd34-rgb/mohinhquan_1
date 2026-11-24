@@ -116,6 +116,9 @@
     .sound-btn { padding: 10px 14px; border: none; border-radius: 8px; background: #38bdf8; color: #082f49; font-weight: bold; cursor: pointer; }
     .sound-btn:hover { background: #0ea5e9; }
     .sound-btn.active { background: #22c55e; color: #052e16; }
+    .mute-btn { padding: 10px 14px; border: none; border-radius: 8px; background: #f97316; color: #fff; font-weight: bold; cursor: pointer; display: none; }
+    .mute-btn.ringing { display: inline-block; animation: pulseBtn 1s infinite; }
+    @keyframes pulseBtn { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
 
     .revenue-btn { padding: 10px 14px; border: none; border-radius: 8px; background: #facc15; color: #422006; font-weight: bold; cursor: pointer; }
     .revenue-btn:hover { background: #eab308; }
@@ -132,7 +135,7 @@
     #support-alerts-box.has-calls { display: block; }
     .support-title { font-size: 16px; font-weight: bold; color: #fca5a5; margin-bottom: 10px; }
     .support-list { display: flex; flex-wrap: wrap; gap: 10px; }
-    .support-item { background: #7f1d1d; border: 1px solid #f87171; border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 260px; }
+    .support-item { background: #7f1d1d; border: 1px solid #f87171; border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 270px; }
     .support-text { font-size: 15px; font-weight: bold; color: #fff; }
     .support-note { font-size: 13px; color: #fde047; margin-top: 4px; font-weight: bold; }
     .support-time { font-size: 12px; color: #fecaca; margin-top: 3px; }
@@ -257,6 +260,7 @@
         <div id="today-label" style="font-size:13px; color:#94a3b8; margin-top:4px;"></div>
       </div>
       <div class="top-actions">
+        <button type="button" id="btn-mute-alert" class="mute-btn">🔇 Tạm tắt tiếng báo</button>
         <button type="button" id="btn-revenue" class="revenue-btn">💰 Doanh thu</button>
         <button type="button" id="btn-sound" class="sound-btn">🔔 Bật chuông báo đơn</button>
         <button type="button" id="btn-open-pw" class="pw-btn">🔑 Đổi mật khẩu</button>
@@ -316,8 +320,7 @@
       const DEFAULT_PASS = "9999";
       const STORAGE_CREDS_KEY = "kitchen_login_creds_v1";
       const STORAGE_ACK_KEY = "kitchen_acked_orders_v1";
-      const STORAGE_NOTIFIED_ORDERS_KEY = "kitchen_notified_orders_v1";
-      const STORAGE_NOTIFIED_CALLS_KEY = "kitchen_notified_calls_v1";
+      const STORAGE_RESOLVED_CALLS_KEY = "kitchen_resolved_calls_v1";
 
       const REVENUE_PIN = "9999";
       const NEW_ORDER_PHRASE = "Có đơn mới, có đơn mới";
@@ -352,7 +355,6 @@
 
       function saveSet(key, setObj) {
         try {
-          // Giữ tối đa 500 ID gần nhất để tránh phình bộ nhớ
           const arr = Array.from(setObj).slice(-500);
           localStorage.setItem(key, JSON.stringify(arr));
         } catch (_) {}
@@ -380,9 +382,11 @@
       const loginMsg = document.getElementById("login-msg");
       const errorBox = document.getElementById("error-box");
       const soundBtn = document.getElementById("btn-sound");
+      const muteBtn = document.getElementById("btn-mute-alert");
 
       let unlocked = false;
       let soundEnabled = false;
+      let alertLoopTimer = null;
       let revenueUnlocked = false;
       let selectedMonthKey = null;
       let latestOrdersMap = new Map();
@@ -391,8 +395,7 @@
       const customFolders = new Set();
 
       const acknowledgedOrderIds = loadSet(STORAGE_ACK_KEY);
-      const notifiedOrderIds = loadSet(STORAGE_NOTIFIED_ORDERS_KEY);
-      const notifiedCallIds = loadSet(STORAGE_NOTIFIED_CALLS_KEY);
+      const localResolvedCallIds = loadSet(STORAGE_RESOLVED_CALLS_KEY);
 
       function showLoginMsg(text, type) {
         loginMsg.className = "login-msg " + type;
@@ -425,12 +428,17 @@
         errorBox.textContent = msg;
       }
 
-      function stopSpeech() {
+      function stopAlertLoop() {
+        if (alertLoopTimer) {
+          clearInterval(alertLoopTimer);
+          alertLoopTimer = null;
+        }
         try {
           if ("speechSynthesis" in window) {
             window.speechSynthesis.cancel();
           }
         } catch (_) {}
+        if (muteBtn) muteBtn.classList.remove("ringing");
       }
 
       function attemptLogin() {
@@ -443,6 +451,7 @@
           appContent.classList.remove("locked");
           renderAll();
           renderStaffCalls();
+          syncAlertLoop();
         } else {
           showLoginMsg("Tài khoản hoặc mật khẩu không đúng!", "error");
         }
@@ -500,7 +509,7 @@
       });
 
       document.getElementById("btn-open-pw").addEventListener("click", () => {
-        stopSpeech();
+        stopAlertLoop();
         appContent.classList.add("locked");
         loginGate.classList.remove("hidden");
         setAuthTab("change");
@@ -508,7 +517,7 @@
 
       document.getElementById("btn-logout").addEventListener("click", () => {
         unlocked = false;
-        stopSpeech();
+        stopAlertLoop();
         loginUserInput.value = "";
         loginPassInput.value = "";
         setAuthTab("login");
@@ -605,17 +614,87 @@
         return Boolean(o && (o.acked === true || acknowledgedOrderIds.has(o.id)));
       }
 
-      function renderStaffCalls() {
-        const pendingCalls = Array.from(latestCallsMap.values())
-          .filter(c => c && c.status !== "resolved" && c.status !== "handled")
-          .sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
+      function isCallResolved(c) {
+        return Boolean(!c || c.status === "resolved" || c.status === "handled" || localResolvedCallIds.has(c.id));
+      }
 
+      function getUnackedNewOrders() {
+        const todayKey = getDateKeyByOffset(0);
+        return Array.from(latestOrdersMap.values())
+          .filter(o => {
+            if (!o || o.status === "done") return false;
+            const orderDate = getDateKey(o.createdAt || o.completedAt || Date.now());
+            return orderDate === todayKey && !isOrderAcked(o);
+          });
+      }
+
+      function getPendingStaffCalls() {
+        return Array.from(latestCallsMap.values())
+          .filter(c => c && !isCallResolved(c))
+          .sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
+      }
+
+      function getNextAlertPhrase() {
+        const pendingCalls = getPendingStaffCalls();
+        if (pendingCalls.length > 0) {
+          const top = pendingCalls[0];
+          const tbl = top.table ? `Bàn ${top.table}` : "Có bàn";
+          const noteText = String(top.note || "").trim();
+          return noteText ? `${tbl} cần hỗ trợ: ${noteText}` : `${tbl} cần hỗ trợ`;
+        }
+        const unackedOrders = getUnackedNewOrders();
+        if (unackedOrders.length > 0) {
+          return NEW_ORDER_PHRASE;
+        }
+        return null;
+      }
+
+      function syncAlertLoop() {
+        if (!unlocked || !soundEnabled) {
+          stopAlertLoop();
+          return;
+        }
+
+        const unackedOrders = getUnackedNewOrders();
+        const pendingCalls = getPendingStaffCalls();
+        const totalPending = unackedOrders.length + pendingCalls.length;
+
+        if (totalPending <= 0) {
+          stopAlertLoop();
+          return;
+        }
+
+        muteBtn.classList.add("ringing");
+        muteBtn.textContent = `🔇 Tạm tắt tiếng (${totalPending})`;
+
+        if (!alertLoopTimer) {
+          const firstPhrase = getNextAlertPhrase();
+          if (firstPhrase) speakPhrase(firstPhrase);
+
+          alertLoopTimer = setInterval(() => {
+            if (!unlocked || !soundEnabled) {
+              stopAlertLoop();
+              return;
+            }
+            const nextPhrase = getNextAlertPhrase();
+            if (!nextPhrase) {
+              stopAlertLoop();
+              return;
+            }
+            speakPhrase(nextPhrase);
+          }, 4500);
+        }
+      }
+
+      function renderStaffCalls() {
+        const pendingCalls = getPendingStaffCalls();
         const box = document.getElementById("support-alerts-box");
         const listEl = document.getElementById("support-alerts-list");
 
         if (!pendingCalls.length) {
           box.classList.remove("has-calls");
           listEl.innerHTML = "";
+          syncAlertLoop();
           return;
         }
 
@@ -625,7 +704,7 @@
           const noteText = String(c.note || "").trim();
           const rawMsg = String(c.message || "").trim();
           const titleLabel = tbl ? `Bàn ${tbl} đang gọi hỗ trợ` : "Có bàn đang gọi hỗ trợ";
-          const detailText = rawMsg || (noteText ? `Bàn ${tbl} cần hỗ trợ: ${noteText}` : (tbl ? `Bàn ${tbl} cần hỗ trợ` : "Cần hỗ trợ"));
+          const detailText = noteText || rawMsg || (tbl ? `Bàn ${tbl} cần hỗ trợ` : "Cần hỗ trợ");
           const timeText = c.createdAt
             ? new Date(Number(c.createdAt)).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
             : "";
@@ -634,7 +713,7 @@
             <div class="support-item">
               <div>
                 <div class="support-text">🔔 ${escapeHtml(titleLabel)}</div>
-                <div class="support-note">Nội dung: ${escapeHtml(detailText)}</div>
+                <div class="support-note">Ghi chú từ khách: ${escapeHtml(detailText)}</div>
                 ${timeText ? `<div class="support-time">Lúc ${timeText}</div>` : ""}
               </div>
               <button type="button" class="btn-resolve-call" data-action="resolve-call" data-id="${escapeHtml(c.id)}">
@@ -643,6 +722,8 @@
             </div>
           `;
         }).join("");
+
+        syncAlertLoop();
       }
 
       function renderRevenue(list) {
@@ -809,6 +890,8 @@
             </div>
           `;
         }).join("");
+
+        syncAlertLoop();
       }
 
       customFolders.add(getDateKeyByOffset(-1));
@@ -849,10 +932,14 @@
         soundBtn.textContent = soundEnabled ? "🔔 Chuông báo: ĐANG BẬT" : "🔔 Bật chuông báo đơn";
         if (soundEnabled) {
           playChime();
-          alert("Đã bật chuông báo! Chỉ kêu 1 lần khi có đơn mới hoặc yêu cầu hỗ trợ mới.");
+          syncAlertLoop();
         } else {
-          stopSpeech();
+          stopAlertLoop();
         }
+      });
+
+      muteBtn.addEventListener("click", () => {
+        stopAlertLoop();
       });
 
       document.getElementById("btn-add-folder").addEventListener("click", () => {
@@ -882,14 +969,13 @@
         if (action === "resolve-call") {
           const callId = target.getAttribute("data-id");
           if (!callId) return;
-          notifiedCallIds.add(callId);
-          saveSet(STORAGE_NOTIFIED_CALLS_KEY, notifiedCallIds);
-          stopSpeech();
+          localResolvedCallIds.add(callId);
+          saveSet(STORAGE_RESOLVED_CALLS_KEY, localResolvedCallIds);
           const currentCall = latestCallsMap.get(callId);
           if (currentCall) {
             latestCallsMap.set(callId, { ...currentCall, status: "resolved" });
-            renderStaffCalls();
           }
+          renderStaffCalls();
           if (typeof window.__firebaseResolveCall === "function") {
             await window.__firebaseResolveCall(callId);
           }
@@ -900,10 +986,7 @@
           const orderId = target.getAttribute("data-id");
           if (!orderId) return;
           acknowledgedOrderIds.add(orderId);
-          notifiedOrderIds.add(orderId);
           saveSet(STORAGE_ACK_KEY, acknowledgedOrderIds);
-          saveSet(STORAGE_NOTIFIED_ORDERS_KEY, notifiedOrderIds);
-          stopSpeech();
           const currentOrder = latestOrdersMap.get(orderId);
           if (currentOrder) {
             latestOrdersMap.set(orderId, { ...currentOrder, acked: true });
@@ -952,11 +1035,9 @@
           }
           for (const id of targetIds) {
             acknowledgedOrderIds.delete(id);
-            notifiedOrderIds.delete(id);
             latestOrdersMap.delete(id);
           }
           saveSet(STORAGE_ACK_KEY, acknowledgedOrderIds);
-          saveSet(STORAGE_NOTIFIED_ORDERS_KEY, notifiedOrderIds);
           customFolders.delete(dateKey);
           expandedDays.delete(dateKey);
           renderAll();
@@ -971,10 +1052,7 @@
           const payload = { status };
           if (status === "done") {
             acknowledgedOrderIds.add(orderId);
-            notifiedOrderIds.add(orderId);
             saveSet(STORAGE_ACK_KEY, acknowledgedOrderIds);
-            saveSet(STORAGE_NOTIFIED_ORDERS_KEY, notifiedOrderIds);
-            stopSpeech();
             payload.acked = true;
             payload.completedAt = Date.now();
           } else if (status === "new") {
@@ -996,46 +1074,35 @@
       });
 
       window.__kitchenBridge = {
-        setOrdersData(data, brandNewOrders) {
+        setOrdersData(data) {
           const nextMap = new Map();
           Object.entries(data || {}).forEach(([id, val]) => {
             if (!id) return;
             const cleanId = String(id).trim();
             if (!cleanId) return;
-            nextMap.set(cleanId, { ...(val || {}), id: cleanId });
+            const merged = { ...(val || {}), id: cleanId };
+            if (acknowledgedOrderIds.has(cleanId) && merged.acked !== false) {
+              merged.acked = true;
+            }
+            nextMap.set(cleanId, merged);
           });
           latestOrdersMap = nextMap;
           renderAll();
-
-          if (!soundEnabled || !unlocked) return;
-          const freshUnnotified = (brandNewOrders || []).filter(o => o && o.id && !notifiedOrderIds.has(o.id));
-          if (freshUnnotified.length > 0) {
-            freshUnnotified.forEach(o => notifiedOrderIds.add(o.id));
-            saveSet(STORAGE_NOTIFIED_ORDERS_KEY, notifiedOrderIds);
-            speakPhrase(NEW_ORDER_PHRASE);
-          }
         },
-        setCallsData(calls, brandNewCalls) {
+        setCallsData(calls) {
           const nextMap = new Map();
           Object.entries(calls || {}).forEach(([id, val]) => {
             if (!id) return;
             const cleanId = String(id).trim();
             if (!cleanId) return;
-            nextMap.set(cleanId, { ...(val || {}), id: cleanId });
+            const merged = { ...(val || {}), id: cleanId };
+            if (localResolvedCallIds.has(cleanId)) {
+              merged.status = "resolved";
+            }
+            nextMap.set(cleanId, merged);
           });
           latestCallsMap = nextMap;
           renderStaffCalls();
-
-          if (!soundEnabled || !unlocked) return;
-          const freshCalls = (brandNewCalls || []).filter(c => c && c.id && !notifiedCallIds.has(c.id));
-          if (freshCalls.length > 0) {
-            freshCalls.forEach(c => notifiedCallIds.add(c.id));
-            saveSet(STORAGE_NOTIFIED_CALLS_KEY, notifiedCallIds);
-            const latest = freshCalls[0];
-            const tbl = latest.table ? `Bàn ${latest.table}` : "Có bàn";
-            const noteText = String(latest.note || "").trim();
-            speakPhrase(noteText ? `${tbl} cần hỗ trợ: ${noteText}` : `${tbl} cần hỗ trợ`);
-          }
         },
         reportError(msg) {
           showError(msg);
@@ -1062,11 +1129,6 @@
       const app = initializeApp(firebaseConfig);
       const db = getDatabase(app);
 
-      let isFirstOrdersLoad = true;
-      let isFirstCallsLoad = true;
-      const seenOrderIds = new Set();
-      const seenCallIds = new Set();
-
       window.__firebaseUpdateOrder = function (orderId, payload) {
         return update(ref(db, `orders/${orderId}`), payload);
       };
@@ -1085,26 +1147,15 @@
       onValue(ref(db, "orders"), (snapshot) => {
         const data = snapshot.val() || {};
         const dedupedData = {};
-        const brandNewOrders = [];
 
         Object.entries(data).forEach(([rawId, val]) => {
           const id = String(rawId || "").trim();
           if (!id || dedupedData[id]) return;
-          const record = { ...(val || {}), id };
-          dedupedData[id] = record;
-
-          if (!seenOrderIds.has(id)) {
-            seenOrderIds.add(id);
-            if (!isFirstOrdersLoad && (!record.status || record.status === "new") && record.acked !== true) {
-              brandNewOrders.push(record);
-            }
-          }
+          dedupedData[id] = { ...(val || {}), id };
         });
 
-        isFirstOrdersLoad = false;
-
         if (window.__kitchenBridge) {
-          window.__kitchenBridge.setOrdersData(dedupedData, brandNewOrders);
+          window.__kitchenBridge.setOrdersData(dedupedData);
         }
       }, (err) => {
         if (window.__kitchenBridge) {
@@ -1115,26 +1166,15 @@
       onValue(ref(db, "staffCalls"), (snapshot) => {
         const calls = snapshot.val() || {};
         const dedupedCalls = {};
-        const brandNewCalls = [];
 
         Object.entries(calls).forEach(([rawId, val]) => {
           const id = String(rawId || "").trim();
           if (!id || dedupedCalls[id]) return;
-          const record = { ...(val || {}), id };
-          dedupedCalls[id] = record;
-
-          if (!seenCallIds.has(id)) {
-            seenCallIds.add(id);
-            if (!isFirstCallsLoad && record.status !== "resolved" && record.status !== "handled") {
-              brandNewCalls.push(record);
-            }
-          }
+          dedupedCalls[id] = { ...(val || {}), id };
         });
 
-        isFirstCallsLoad = false;
-
         if (window.__kitchenBridge) {
-          window.__kitchenBridge.setCallsData(dedupedCalls, brandNewCalls);
+          window.__kitchenBridge.setCallsData(dedupedCalls);
         }
       }, (err) => {
         if (window.__kitchenBridge) {
