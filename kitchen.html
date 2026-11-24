@@ -8,7 +8,7 @@
     * { box-sizing: border-box; }
     body { font-family: Arial, sans-serif; margin: 0; padding: 16px; background: #0f172a; color: #f8fafc; }
 
-    /* Màn hình đăng nhập */
+    /* Màn hình đăng nhập & đổi mật khẩu quầy tiếp nhận */
     #login-gate {
       position: fixed;
       inset: 0;
@@ -22,20 +22,45 @@
     #login-gate.hidden { display: none; }
     .login-card {
       width: 100%;
-      max-width: 380px;
+      max-width: 390px;
       background: #0f172a;
       border: 1px solid #334155;
       border-radius: 14px;
-      padding: 24px 20px;
+      padding: 22px 20px;
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
     }
     .login-title { margin: 0 0 6px; font-size: 20px; font-weight: bold; color: #f8fafc; text-align: center; }
-    .login-sub { margin: 0 0 18px; font-size: 13px; color: #94a3b8; text-align: center; }
-    .login-field { margin-bottom: 14px; }
-    .login-field label { display: block; font-size: 13px; color: #cbd5e1; margin-bottom: 6px; font-weight: bold; }
+    .login-sub { margin: 0 0 16px; font-size: 13px; color: #94a3b8; text-align: center; }
+
+    .auth-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      background: #1e293b;
+      padding: 4px;
+      border-radius: 9px;
+      margin-bottom: 14px;
+    }
+    .auth-tab {
+      border: none;
+      background: transparent;
+      color: #94a3b8;
+      padding: 8px;
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .auth-tab.active {
+      background: #38bdf8;
+      color: #082f49;
+    }
+
+    .login-field { margin-bottom: 12px; }
+    .login-field label { display: block; font-size: 13px; color: #cbd5e1; margin-bottom: 5px; font-weight: bold; }
     .login-field input {
       width: 100%;
-      padding: 11px 12px;
+      padding: 10px 12px;
       border-radius: 8px;
       border: 1px solid #475569;
       background: #1e293b;
@@ -46,7 +71,7 @@
     .login-field input:focus { border-color: #38bdf8; }
     .login-btn {
       width: 100%;
-      padding: 12px;
+      padding: 11px;
       border: none;
       border-radius: 8px;
       background: #22c55e;
@@ -56,16 +81,32 @@
       cursor: pointer;
     }
     .login-btn:hover { background: #16a34a; }
-    .login-error {
+    .login-btn.change-btn {
+      background: #38bdf8;
+      color: #082f49;
+    }
+    .login-btn.change-btn:hover { background: #0ea5e9; }
+
+    .login-msg {
       display: none;
       margin-top: 12px;
       padding: 9px 10px;
       border-radius: 8px;
+      font-size: 13px;
+      text-align: center;
+      font-weight: bold;
+    }
+    .login-msg.error {
+      display: block;
       background: rgba(239, 68, 68, 0.16);
       border: 1px solid #ef4444;
       color: #fca5a5;
-      font-size: 13px;
-      text-align: center;
+    }
+    .login-msg.success {
+      display: block;
+      background: rgba(34, 197, 94, 0.16);
+      border: 1px solid #22c55e;
+      color: #86efac;
     }
 
     #app-content.locked { display: none; }
@@ -80,6 +121,8 @@
 
     .revenue-btn { padding: 10px 14px; border: none; border-radius: 8px; background: #facc15; color: #422006; font-weight: bold; cursor: pointer; }
     .revenue-btn:hover { background: #eab308; }
+    .pw-btn { padding: 10px 14px; border: 1px solid #475569; border-radius: 8px; background: #1e293b; color: #e2e8f0; font-weight: bold; cursor: pointer; }
+    .pw-btn:hover { background: #334155; }
     .logout-btn { padding: 10px 14px; border: 1px solid #ef4444; border-radius: 8px; background: rgba(239, 68, 68, 0.14); color: #fca5a5; font-weight: bold; cursor: pointer; }
     .logout-btn:hover { background: #dc2626; color: #fff; }
     .lock-btn { padding: 7px 12px; border: 1px solid #475569; border-radius: 6px; background: #1e293b; color: #e2e8f0; font-weight: bold; cursor: pointer; font-size: 13px; }
@@ -157,18 +200,47 @@
 <body>
   <div id="login-gate">
     <div class="login-card">
-      <h2 class="login-title">🔐 ĐĂNG NHẬP QUẦY TIẾP NHẬN</h2>
-      <p class="login-sub">Nhập tài khoản và mật khẩu để mở quầy tiếp nhận</p>
-      <div class="login-field">
-        <label for="login-user">Tài khoản</label>
-        <input id="login-user" type="text" placeholder="Nhập tài khoản" autocomplete="off" />
+      <h2 class="login-title">🔐 QUẦY TIẾP NHẬN ĐƠN</h2>
+      <p class="login-sub">Đăng nhập để mở quầy hoặc đổi mật khẩu đăng nhập</p>
+
+      <div class="auth-tabs">
+        <button id="tab-login" type="button" class="auth-tab active">Đăng nhập</button>
+        <button id="tab-change-pw" type="button" class="auth-tab">Đổi mật khẩu</button>
       </div>
-      <div class="login-field">
-        <label for="login-pass">Mật khẩu</label>
-        <input id="login-pass" type="password" placeholder="Nhập mật khẩu" autocomplete="off" />
+
+      <div id="panel-login">
+        <div class="login-field">
+          <label for="login-user">Tài khoản</label>
+          <input id="login-user" type="text" placeholder="Nhập tài khoản" autocomplete="off" />
+        </div>
+        <div class="login-field">
+          <label for="login-pass">Mật khẩu</label>
+          <input id="login-pass" type="password" placeholder="Nhập mật khẩu" autocomplete="off" />
+        </div>
+        <button id="login-submit-btn" type="button" class="login-btn">Đăng nhập</button>
       </div>
-      <button id="login-submit-btn" type="button" class="login-btn">Đăng nhập</button>
-      <div id="login-error" class="login-error">Tài khoản hoặc mật khẩu không đúng!</div>
+
+      <div id="panel-change-pw" style="display:none;">
+        <div class="login-field">
+          <label for="cpw-user">Tài khoản</label>
+          <input id="cpw-user" type="text" placeholder="Nhập tài khoản hiện tại" autocomplete="off" />
+        </div>
+        <div class="login-field">
+          <label for="cpw-old">Mật khẩu hiện tại</label>
+          <input id="cpw-old" type="password" placeholder="Nhập mật khẩu hiện tại" autocomplete="off" />
+        </div>
+        <div class="login-field">
+          <label for="cpw-new">Mật khẩu mới</label>
+          <input id="cpw-new" type="password" placeholder="Nhập mật khẩu mới" autocomplete="off" />
+        </div>
+        <div class="login-field">
+          <label for="cpw-confirm">Nhập lại mật khẩu mới</label>
+          <input id="cpw-confirm" type="password" placeholder="Xác nhận mật khẩu mới" autocomplete="off" />
+        </div>
+        <button id="cpw-submit-btn" type="button" class="login-btn change-btn">Lưu mật khẩu mới</button>
+      </div>
+
+      <div id="login-msg" class="login-msg"></div>
     </div>
   </div>
 
@@ -189,6 +261,7 @@
         <button type="button" id="btn-mute-alert" class="mute-btn">🔇 Đang kêu... (Bấm dừng)</button>
         <button type="button" id="btn-revenue" class="revenue-btn">💰 Doanh thu</button>
         <button type="button" id="btn-sound" class="sound-btn">🔔 Bật chuông báo đơn</button>
+        <button type="button" id="btn-open-pw" class="pw-btn">🔑 Đổi mật khẩu</button>
         <button type="button" id="btn-logout" class="logout-btn">🚪 Đăng xuất</button>
       </div>
     </div>
@@ -241,17 +314,52 @@
 
   <script>
     (function () {
-      const LOGIN_USER = "abcd";
-      const LOGIN_PASS = "9999";
+      const DEFAULT_USER = "abcd";
+      const DEFAULT_PASS = "9999";
+      const STORAGE_CREDS_KEY = "kitchen_login_creds_v1";
+
       const REVENUE_PIN = "9999";
       const NEW_ORDER_PHRASE = "Có đơn mới, có đơn mới";
 
+      function loadCreds() {
+        try {
+          const raw = localStorage.getItem(STORAGE_CREDS_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && parsed.user && parsed.pass) {
+              return { user: String(parsed.user), pass: String(parsed.pass) };
+            }
+          }
+        } catch (_) {}
+        return { user: DEFAULT_USER, pass: DEFAULT_PASS };
+      }
+
+      function saveCreds(creds) {
+        try {
+          localStorage.setItem(STORAGE_CREDS_KEY, JSON.stringify(creds));
+        } catch (_) {}
+      }
+
+      let creds = loadCreds();
+
       const loginGate = document.getElementById("login-gate");
       const appContent = document.getElementById("app-content");
+      const tabLogin = document.getElementById("tab-login");
+      const tabChangePw = document.getElementById("tab-change-pw");
+      const panelLogin = document.getElementById("panel-login");
+      const panelChangePw = document.getElementById("panel-change-pw");
+
       const loginUserInput = document.getElementById("login-user");
       const loginPassInput = document.getElementById("login-pass");
       const loginSubmitBtn = document.getElementById("login-submit-btn");
-      const loginError = document.getElementById("login-error");
+
+      const cpwUserInput = document.getElementById("cpw-user");
+      const cpwOldInput = document.getElementById("cpw-old");
+      const cpwNewInput = document.getElementById("cpw-new");
+      const cpwConfirmInput = document.getElementById("cpw-confirm");
+      const cpwSubmitBtn = document.getElementById("cpw-submit-btn");
+
+      const loginMsg = document.getElementById("login-msg");
       const errorBox = document.getElementById("error-box");
 
       let unlocked = false;
@@ -268,6 +376,31 @@
       const acknowledgedOrderIds = new Set(
         JSON.parse(localStorage.getItem(STORAGE_ACK_KEY) || "[]")
       );
+
+      function showLoginMsg(text, type) {
+        loginMsg.className = "login-msg " + type;
+        loginMsg.textContent = text;
+      }
+
+      function clearLoginMsg() {
+        loginMsg.className = "login-msg";
+        loginMsg.textContent = "";
+      }
+
+      function setAuthTab(mode) {
+        clearLoginMsg();
+        const isChange = mode === "change";
+        tabLogin.classList.toggle("active", !isChange);
+        tabChangePw.classList.toggle("active", isChange);
+        panelLogin.style.display = isChange ? "none" : "block";
+        panelChangePw.style.display = isChange ? "block" : "none";
+        if (isChange) {
+          cpwUserInput.value = creds.user;
+        }
+      }
+
+      tabLogin.addEventListener("click", () => setAuthTab("login"));
+      tabChangePw.addEventListener("click", () => setAuthTab("change"));
 
       function showError(msg) {
         if (!errorBox) return;
@@ -292,16 +425,54 @@
       function attemptLogin() {
         const u = (loginUserInput.value || "").trim().toLowerCase();
         const p = (loginPassInput.value || "").trim();
-        if (u === LOGIN_USER && p === LOGIN_PASS) {
+        if (u === creds.user.toLowerCase() && p === creds.pass) {
           unlocked = true;
-          loginError.style.display = "none";
+          clearLoginMsg();
           loginGate.classList.add("hidden");
           appContent.classList.remove("locked");
           renderAll(latestOrdersData);
           renderStaffCalls(latestCallsData);
         } else {
-          loginError.style.display = "block";
+          showLoginMsg("Tài khoản hoặc mật khẩu không đúng!", "error");
         }
+      }
+
+      function attemptChangePassword() {
+        const u = (cpwUserInput.value || "").trim();
+        const oldP = (cpwOldInput.value || "").trim();
+        const newP = (cpwNewInput.value || "").trim();
+        const confirmP = (cpwConfirmInput.value || "").trim();
+
+        if (!u) {
+          showLoginMsg("Vui lòng nhập tài khoản!", "error");
+          return;
+        }
+        if (u.toLowerCase() !== creds.user.toLowerCase() || oldP !== creds.pass) {
+          showLoginMsg("Tài khoản hoặc mật khẩu hiện tại không đúng!", "error");
+          return;
+        }
+        if (!newP) {
+          showLoginMsg("Vui lòng nhập mật khẩu mới!", "error");
+          return;
+        }
+        if (newP !== confirmP) {
+          showLoginMsg("Mật khẩu mới nhập lại không khớp!", "error");
+          return;
+        }
+
+        creds = { user: u, pass: newP };
+        saveCreds(creds);
+
+        cpwOldInput.value = "";
+        cpwNewInput.value = "";
+        cpwConfirmInput.value = "";
+        loginUserInput.value = u;
+        loginPassInput.value = "";
+
+        showLoginMsg("Đã đổi mật khẩu thành công! Hãy đăng nhập bằng mật khẩu mới.", "success");
+        setTimeout(() => {
+          setAuthTab("login");
+        }, 900);
       }
 
       loginSubmitBtn.addEventListener("click", attemptLogin);
@@ -312,12 +483,24 @@
         if (e.key === "Enter") attemptLogin();
       });
 
+      cpwSubmitBtn.addEventListener("click", attemptChangePassword);
+      cpwConfirmInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") attemptChangePassword();
+      });
+
+      document.getElementById("btn-open-pw").addEventListener("click", () => {
+        stopAlertLoop();
+        appContent.classList.add("locked");
+        loginGate.classList.remove("hidden");
+        setAuthTab("change");
+      });
+
       document.getElementById("btn-logout").addEventListener("click", () => {
         unlocked = false;
         stopAlertLoop();
         loginUserInput.value = "";
         loginPassInput.value = "";
-        loginError.style.display = "none";
+        setAuthTab("login");
         appContent.classList.add("locked");
         loginGate.classList.remove("hidden");
       });
